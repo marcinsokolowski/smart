@@ -1,0 +1,5 @@
+#!/bin/bash
+
+
+ls 1*.fits | awk '{print substr($1,12,14);}' | sort -n -u > timestamps.txt
+

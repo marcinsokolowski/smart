@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# requirements :
+# 1/ proper metafits file with NCHANS, NSCANS and INTTIME set properly - otherwise cotter will protest !!!
+#    for all 4second observations from Nick : python /home/msok/bighorns/software/analysis/scripts/python/fix_metadata.py 1150234552.metafits --inttime=4 --n_scans=320 --n_channels=768
+#    to process a single 4second :  python /home/msok/bighorns/software/analysis/scripts/python/fix_metadata.py 1150234552.metafits --inttime=4 --n_scans=1 --n_channels=768
+
+# script converts every timestamp into a separate CASA measurements set and applies calibration and images
+# mwa-process02 version : scp msok@mwa-process02:~/D0005/msok/asvo/202002/1150234232/data/all/smart_cotter_image_all.sh smart_cotter_image_all.sh.mwa02
+# 
+
+
+# sleep 120
+# nohup cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m 1150234552.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -o 1150234552.ms 1150234552_*_??.fits > cotter.out 2>&1 &
+# casapy -c apply_custom_cal.py 1150234552.ms 1150234232.cal 
+# casapy -c image_tile_auto.py --imagesize=2048 1150234552.ms
+
+
+do_scp=0
+if [[ -n "$1" && "$1" != "-" ]]; then
+   do_scp=$1
+fi
+galaxy_path=/astro/mwaops/vcs/1150234552/vis
+
+do_remove=0
+if [[ -n "$2" && "$2" != "-" ]]; then
+   do_remove=$2
+fi
+
+change_phase_center=1
+
+cp $AAVS_PATH/analysis/MWAdas/scripts/image_tile_auto.py .
+cp $AAVS_PATH/analysis/MWAdas/scripts/apply_custom_cal.py .
+
+obsid=1150234552
+cal=1150234232.cal
+
+for timestamp in `cat timestamps.txt`
+do
+   echo
+   date
+   
+   casa_ms=${obsid}_${timestamp}.ms
+   
+   if [[ ! -d ${obsid}_${timestamp}.ms ]]; then
+      if [[ $do_scp -gt 0 ]]; then 
+         echo "rsync -avP galaxy:${galaxy_path}/${obsid}_${timestamp}*.fits ."
+         rsync -avP galaxy:${galaxy_path}/${obsid}_${timestamp}*.fits .
+      fi
+   
+      echo "cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m ${timestamp}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*.fits"
+      cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m ${timestamp}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*.fits   
+  
+      date   
+      echo "flagdata('${obsid}_${timestamp}.ms',mode='unflag')" > unflag.py
+      echo "casapy -c unflag.py"
+      casapy -c unflag.py 
+      
+      date   
+      echo "casapy -c apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}"
+      casapy -c apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}
+      
+      if [[ $do_remove -gt 0 ]]; then
+         echo "rm -fr ${obsid}_${timestamp}*.fits"
+         rm -fr ${obsid}_${timestamp}*.fits
+      else
+         echo "WARNING : remove is not required (may produce a lot of data) !"
+      fi
+   else
+      echo "WARNING : CASA ms already exists -> skipped"
+   fi
+
+   if [[ $change_phase_center -gt 0 ]]; then
+      date
+      echo "/home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h34m08.9s -07d21m53.409s"
+      /home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h34m08.9s -07d21m53.409s
+      date
+   fi
+         
+   date
+   echo "casapy -c image_tile_auto.py --imagesize=2048 ${obsid}_${timestamp}.ms"
+   casapy -c image_tile_auto.py --imagesize=2048 ${obsid}_${timestamp}.ms   
+
+   fix_path=`which fixCoordHdr.py`
+   for fits in `ls ${obsid}_${timestamp}.ms*__??_*.fits`
+   do
+      echo "python $fix_path $fits"
+      python $fix_path $fits
+   done   
+done
+
+
+
+
+

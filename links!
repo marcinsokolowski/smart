@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# 1150234552_20160617213701_gpubox08_00.fits
+
+i=0
+for timestamp in `cat timestamps.txt`
+do
+   i_str=`echo $i | awk '{printf("%02d\n",$1);}'`
+
+   for file in `ls ../1150234552_${timestamp}_gpubox*.fits`
+   do
+      base=`basename $file`      
+      b=`echo $base | awk '{print substr($1,1,34);}'`
+      new_name=${b}_${i_str}.fits
+      
+      echo "ln -s ${file} ${new_name}"
+      ln -s ${file} ${new_name}
+   done
+  
+   i=$(($i+1))
+done

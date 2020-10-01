@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# script converts every timestamp into a separate CASA measurements set and applies calibration and images
+
+# sleep 120
+# nohup cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m 1150234552.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -o 1150234552.ms 1150234552_*_??.fits > cotter.out 2>&1 &
+# casapy -c apply_custom_cal.py 1150234552.ms 1150234232.cal 
+# casapy -c image_tile_auto.py --imagesize=2048 1150234552.ms
+
+obsid=1150234552
+cal=1150234232.cal
+
+for timestamp in `cat timestamps.txt`
+do
+   echo
+   date
+   echo "cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m ${obsid}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*_00.fits"
+   cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m ${obsid}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*_00.fits   
+      
+   date   
+   echo "flagdata('${obsid}_${timestamp}.ms',mode='unflag')" > unflag.py
+   echo "casapy -c unflag.py"
+   casapy -c unflag.py 
+      
+   date   
+   echo "casapy -c apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}"
+   casapy -c apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}
+   
+   date
+   echo "casapy -c image_tile_auto.py --imagesize=2048 ${obsid}_${timestamp}.ms"
+   casapy -c image_tile_auto.py --imagesize=2048 ${obsid}_${timestamp}.ms   
+done
+
+
+
+
+
