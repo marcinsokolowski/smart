@@ -1,14 +1,16 @@
 #!/bin/bash -l
 
 # WARNING : programs azh2radec and date2date are probably not compiled on galaxy/magnus ..., but I can do it ...
+# Example : sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh 1278106408
 
 #SBATCH --account=pawsey0348
+#SBATCH --account=mwavcs
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
 #SBATCH --mem=16gb
-#SBATCH --output=/astro/mwaops/msok/log/smart/smart.o%j
-#SBATCH --error=/astro/mwaops/msok/log/smart/smart.e%j
+#SBATCH --output=./smart.o%j
+#SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
 
 if [[ -s $HOME/smart/bin/magnus/env ]]; then
