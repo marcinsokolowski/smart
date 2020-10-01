@@ -64,10 +64,10 @@ if __name__ == '__main__':
    n_chans=options.n_channels
    inttime=4
 
-   print "####################################################"
-   print "fitsname       = %s"   % fitsname
-   print "n_channels     = %d" % (options.n_channels)
-   print "####################################################"
+   print("####################################################")
+   print("fitsname       = %s"   % fitsname)
+   print("n_channels     = %d" % (options.n_channels))
+   print("####################################################")
 
    fits = pyfits.open(fitsname)
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
    fits[0].header['INTTIME']   = inttime
    fits[0].header['NCHANS']    = n_chans
 
-   print "Writing fits %s" % (fitsname)
+   print("Writing fits %s" % (fitsname))
    fits.writeto( fitsname, overwrite=True ) 
 
 
