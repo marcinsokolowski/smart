@@ -1,0 +1,71 @@
+echo "loading profile"
+
+# This is loaded by bash by defaul so I don't think we need to do it again
+#test -z "$PROFILEREAD" && . /etc/profile || true
+
+
+module load pawseytools
+# Allocation usage : pawseyAccountBalance -p pawsey0348 -u
+
+
+if [[ ! -z "$SLURM_CLUSTER_NAME" ]]
+then
+  # we are on a worker node
+  cluster=$SLURM_CLUSTER_NAME
+else
+  # we are on a login node
+  cluster=$PAWSEY_CLUSTER
+fi
+export cluster        
+export sbatch_cluster=$cluster
+
+# module use /group/mwa/software/modulefiles
+# module load MWA_Tools/mwa-sci
+
+if [[ "${cluster}" == "galaxy" ]]
+then
+    echo "Galaxy!"
+#    module use /group/mwa/software/modulefiles
+#    module load MWA_Tools/mwa-sci            
+    
+    # list loaded modules :
+    # module list    
+elif [[ "${cluster}" == "zeus" ]]
+then
+    echo "Zeus!"
+elif [[ "${cluster}" == "magnus" ]]
+then
+    echo "Magnus!"
+    source /home/msok/smart/bin/magnus/env    
+elif [[ "${cluster}" == "mwa" ]]
+then
+    echo "Garrawarla !"
+    source /home/msok/smart/bin/garrawarla/env
+
+#    module use /pawsey/mwa/software/mwa_sles12sp4/modulefiles
+    module use /pawsey/mwa/software/python3/modulefiles
+    module load casa        
+    module load cotter/v4.3
+    module load mwa-reduce
+    module load chgcentre
+    module load python/3.8.2
+    module load wsclean
+    module load astropy    
+    module load scipy
+    module load matplotlib
+ 
+    # WARNING : there is some conflict of h5py and gcc :   
+    module swap gcc/8.3.0 gcc/4.8.5
+    module load h5py
+    module swap gcc/4.8.5 gcc/8.3.0
+#    module load h5py
+#    module swap gcc/8.3.0 h5py
+    
+    
+    export sbatch_cluster=garrawarla
+    export srun_command=srun
+else
+    echo "Where am i?"
+fi
+                        
+                        

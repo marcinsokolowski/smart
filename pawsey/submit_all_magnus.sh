@@ -45,8 +45,13 @@ if [[ -d data || -L data ]]; then
    echo "INFO : data subdirectory / link already exists -> nothing to be done"
 else
    echo "WARNING : data subdirectory does not exist -> creating a link:"
-   echo "ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data"
-   ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data
+   if [[ $cluster != "mwa" && $cluster != "garrawarla" ]]; then # mwa = garrawarla
+      echo "ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data"
+      ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data
+   else
+      echo "ln -s /astro/mwaops/msok/mwa/smart/data"
+      ln -s /astro/mwaops/msok/mwa/smart/data 
+   fi
 fi
 
 mkdir -p TIMESTAMPS_BACKUP/
@@ -68,8 +73,8 @@ do
    fi
    
    # /astro/mwaops/vcs/ -> /astro/mwavcs/vcs/1275085816/vis/
-   echo "sbatch -p workq -M magnus $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - - /astro/mwavcs/vcs/${obsid}/vis ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last"
-   sbatch -p workq -M magnus $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - - /astro/mwavcs/vcs/${obsid}/vis ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last
+   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - - /astro/mwavcs/vcs/${obsid}/vis ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last"
+   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - - /astro/mwavcs/vcs/${obsid}/vis ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last
 
 
 #   echo "mv ${timestep_file} ${timestep_file}.SUBMITTED"

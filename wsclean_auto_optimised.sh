@@ -49,6 +49,10 @@ if [[ $comp == "mwa-process02" ]]; then
 #    export PATH=/home/msok/mwa_software/anoko/anoko/chgcentre/build/:$PATH
 fi
 
+wsclean_path="/group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean"
+if [[ $cluster == "mwa" || $cluster == "garrawarla" ]]; then # mwa = garrawarla
+   wsclean_path=`which wsclean`
+fi
 
 NCPUS=4
 
@@ -125,8 +129,8 @@ if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper cond
     # echo "GPS time > 1219795217 ( 20180901_000000 ) -> using COMPACT CONFIGURATION SETTINGS"
     echo "max_baseline_int = $max_baseline_int < 2800 -> using COMPACT CONFIGURATION SETTINGS"
     
-    echo "time /group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}"
-    time /group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}"
+    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}
 else
     # GPS time <= 1219795217 ( 20180901_000000 ) -> using LONG-BASELINES SETTINGS"
     echo "max_baseline_int = $max_baseline_int >= 2800 -> using LONG-BASELINES SETTINGS"
@@ -139,8 +143,8 @@ else
 #    echo "wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 #    wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
-    echo "time /group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}"
-    time /group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}"
+    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}
 fi    
 
 fits_xx=wsclean_${ms_b}_briggs-XX-${beam_corr_type}.fits

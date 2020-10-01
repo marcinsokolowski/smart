@@ -8,6 +8,7 @@
 #    Paste SBATCH lines into new version of pawsey_smart_cotter_timestep.sh and add -l in #!/bin/bash -l line 
 
 #SBATCH --account=pawsey0348
+#SBATCH --account=mwavcs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
@@ -15,7 +16,7 @@
 #SBATCH --output=./smart.o%j
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
-source $HOME/smart/bin/magnus/env
+source $HOME/smart/bin/$COMP/env
 
 
 # requirements :
@@ -260,8 +261,8 @@ do
             fi
    
             # 2020-07-11 - -norfi removed 
-            echo "cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "$srun_command cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+            $srun_command cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
 
             if [[ -d ${obsid}_${timestamp}.ms ]]; then   
                date   
