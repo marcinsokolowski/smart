@@ -361,8 +361,8 @@ done
 
 
 if [[ $is_last -gt 0 ]]; then
-   echo "sbatch -p workq -M magnus $SMART_DIR/bin/pawsey/pawsey_avg_images.sh"
-   sbatch -p workq -M magnus $SMART_DIR/bin/pawsey/pawsey_avg_images.sh   
+   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh"
+   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh   
 fi
 
 

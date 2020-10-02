@@ -44,13 +44,18 @@ fi
 if [[ -d data || -L data ]]; then
    echo "INFO : data subdirectory / link already exists -> nothing to be done"
 else
-   echo "WARNING : data subdirectory does not exist -> creating a link:"
-   if [[ $cluster != "mwa" && $cluster != "garrawarla" ]]; then # mwa = garrawarla
-      echo "ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data"
-      ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data
+   echo "WARNING : data subdirectory does not exist -> creating a link for user = $USER :"
+   if [[ $USER == "msok" ]]; then
+      if [[ $cluster != "mwa" && $cluster != "garrawarla" ]]; then # mwa = garrawarla
+         echo "ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data"
+         ln -s /group/mwasci/msok/test/202002/1194350120/J2330/data
+      else
+         echo "ln -s /astro/mwaops/msok/mwa/smart/data"
+         ln -s /astro/mwaops/msok/mwa/smart/data 
+      fi
    else
-      echo "ln -s /astro/mwaops/msok/mwa/smart/data"
-      ln -s /astro/mwaops/msok/mwa/smart/data 
+      echo "$USER : ln -s ~/github/mwa_pb/data"
+      ln -s ~/github/mwa_pb/data
    fi
 fi
 

@@ -8,6 +8,7 @@
 #    Paste SBATCH lines into new version of pawsey_smart_cotter_timestep.sh and add -l in #!/bin/bash -l line 
 
 #SBATCH --account=pawsey0348
+#SBATCH --account=mwavcs
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
@@ -15,7 +16,7 @@
 #SBATCH --output=./smart_avgimages.o%j
 #SBATCH --error=./smart_avgimages.e%j
 #SBATCH --export=NONE
-source $HOME/smart/bin/magnus/env
+source $HOME/smart/bin/$COMP/env
 
 
 # wsclean_1194350120_20171110115805_briggs-I-image.fits

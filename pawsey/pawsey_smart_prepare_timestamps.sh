@@ -13,11 +13,12 @@
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
 
-if [[ -s $HOME/smart/bin/magnus/env ]]; then
-   echo "source $HOME/smart/bin/magnus/env"
-   source $HOME/smart/bin/magnus/env
+echo "DEBUG : COMP = $COMP"
+if [[ -s $HOME/smart/bin/$COMP/env ]]; then
+   echo "source $HOME/smart/bin/$COMP/env"
+   source $HOME/smart/bin/$COMP/env
 else
-   echo "WARNING : file $HOME/smart/bin/magnus/env not found -> most likely non-PAWSEY system"
+   echo "WARNING : file $HOME/smart/bin/$COMP/env not found -> most likely non-PAWSEY system"
 fi
 
 smart_bin=$SMART_DIR/bin/
@@ -69,7 +70,8 @@ if [[ -n "$6" && "$6" != "-" ]]; then
    n_channels=$6
 fi
 
-remote_dir=/group/mwasci/msok/test/202002/${obsid}/
+# remote_dir=/group/mwasci/msok/test/202002/${obsid}/
+remote_dir=
 if [[ -n "$7" && "$7" != "-" ]]; then
    remote_dir=$7
 fi
