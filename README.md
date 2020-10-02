@@ -12,3 +12,5 @@ Scripts for processing MWA VCS data
 # Process all timestmaps :
 # submit_all_magnus.sh 1278106408 1278106288 "00h34m08.9s -07d21m53.4s"
 # 
+# Averaging (if not done automatically) :
+# sbatch -p workq -M garrawarla /home/susmita/smart//bin/pawsey/pawsey_avg_images.sh
