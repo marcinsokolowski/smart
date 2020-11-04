@@ -12,11 +12,12 @@
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
-#SBATCH --mem=16gb
+#SBATCH --mem=64gb
 #SBATCH --output=./smart.o%j
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
 
+COMP=garrawarla
 echo "source $HOME/smart/bin/$COMP/env"
 source $HOME/smart/bin/$COMP/env
 

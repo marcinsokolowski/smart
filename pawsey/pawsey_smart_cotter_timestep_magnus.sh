@@ -15,7 +15,8 @@
 #SBATCH --output=./smart.o%j
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
-source $HOME/smart/bin/$COMP/env
+source $HOME/smart/bin/magnus/env
+# source $HOME/smart/bin/$COMP/env
 
 
 # requirements :

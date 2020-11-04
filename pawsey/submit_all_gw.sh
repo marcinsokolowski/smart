@@ -41,10 +41,16 @@ if [[ -n "$6" && "$6" != "-" ]]; then
 fi
 
 vis_dir=/astro/mwavcs/vcs/${obsid}/vis
-if [[ -n "$7" && "$7" != "-" ]]; then  
+if [[ -n "$7" && "$7" != "-" ]]; then
    vis_dir=$7
 fi
    
+do_remove=1
+if [[ -n "$8" && "$8" != "-" ]]; then
+   do_remove=$8
+fi   
+   
+
 if [[ -d data || -L data ]]; then
    echo "INFO : data subdirectory / link already exists -> nothing to be done"
 else
@@ -58,12 +64,6 @@ else
          ln -s /astro/mwaops/msok/mwa/smart/data 
       fi
    else
-      if [[ $USER == "susmita" && $cluster == "magnus" ]]; then
-         echo "DEBUG : user = susmita , cluster = magnus"
-         echo "cp -a /astro/mwavcs/susmita/code/mwa_pb/data ."
-         cp -a /astro/mwavcs/susmita/code/mwa_pb/data .
-      fi
-                                             
       echo "$USER : ln -s ~/github/mwa_pb/data"
       ln -s ~/github/mwa_pb/data
    fi
@@ -75,11 +75,15 @@ cp  ${file_template} TIMESTAMPS_BACKUP/
 
 last_file=`ls ${file_template} | tail -1`
 
+echo "DEBUG TEMPLATE : ${file_template}"
+sleep 2
+
 for timestep_file in `ls ${file_template}`
 do
    # last 1 is to create subdirectories for each timestamp
 #   echo "sbatch -p workq -M magnus $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - - - - - \"00h34m21.83s -05d34m36.72s\" - - $timestep_file 1"
 #   sbatch -p workq -M magnus $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - - - - - "00h34m21.83s -05d34m36.72s" - - $timestep_file 1
+   echo "DEBUG : timestep_file = $timestep_file"
 
    is_last=0
    if [[ $timestep_file == $last_file ]]; then
@@ -88,8 +92,8 @@ do
    fi
    
    # /astro/mwaops/vcs/ -> /astro/mwavcs/vcs/1275085816/vis/
-   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep_magnus.sh - - ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last"
-   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep_magnus.sh - - ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last
+   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep_gw.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last"
+   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep_gw.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last
 
 
 #   echo "mv ${timestep_file} ${timestep_file}.SUBMITTED"

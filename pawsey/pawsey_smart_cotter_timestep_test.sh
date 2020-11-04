@@ -16,9 +16,7 @@
 #SBATCH --output=./smart.o%j
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
-
-echo "source $HOME/smart/bin/$COMP/env"
-source $HOME/smart/bin/$COMP/env
+source $HOME/smart/bin/magnus/env
 
 
 # requirements :
@@ -72,7 +70,7 @@ fi
 if [[ -n "$3" && "$3" != "-" ]]; then # SHOULD REALLY BE EARLIER BUT IS HERE TO BE ABLE TO USE DEFAULT LOCATION :
    galaxy_path=$3
 else
-   galaxy_path=/astro/mwaops/vcs/${obsid}/cal/${calid}/vis
+   galaxy_path=/astro/mwaops/vcs/${obsid}/vis
 fi
 
 calid=1150234232
@@ -298,7 +296,7 @@ do
                   applysolutions ${obsid}_${timestamp}.ms ${bin_file}
               fi
       
-              if [[ 1 -gt 0 ]]; then
+              if [[ $do_remove -gt 0 ]]; then
                   echo "rm -fr ${obsid}_${timestamp}*.fits"
                   rm -fr ${obsid}_${timestamp}*.fits
               else
