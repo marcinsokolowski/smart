@@ -126,8 +126,8 @@ cp $SMART_DIR/bin/apply_custom_cal.py .
                rsync -avP ${galaxy_path}/${obsid}_${timestamp}*.fits .
             fi
    
-            echo "cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m ${timestamp}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -noflagautos  -m ${timestamp}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -noflagautos  -m ${timestamp}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+            cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -noflagautos  -m ${timestamp}.metafits -norfi -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
 
             if [[ -d ${obsid}_${timestamp}.ms ]]; then   
                date   

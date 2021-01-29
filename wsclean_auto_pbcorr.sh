@@ -28,7 +28,7 @@ fi
 clean_thresh=0.050
 
 #if [[ $n_iter -gt 0 ]]; then
-#   options="-joinpolarizations"
+#   options="-join-polarizations"
 #fi
 
 imagesize=2048
@@ -123,8 +123,8 @@ else
 #    echo "wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 #    wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
-    echo "/group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean -apply-primary-beam -mwa-path data/ -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol I,Q,U,V -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 ${options} ${ms}"
-    /group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean -apply-primary-beam -mwa-path data/ -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol I,Q,U,V -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 ${options} ${ms}
+    echo "/group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean -apply-primary-beam -mwa-path data/ -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol I,Q,U,V -abs-mem 128 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 ${options} ${ms}"
+    /group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean -apply-primary-beam -mwa-path data/ -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol I,Q,U,V -abs-mem 128 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 ${options} ${ms}
 fi    
 
 fits_xx=wsclean_${ms_b}_briggs-XX-${beam_corr_type}.fits

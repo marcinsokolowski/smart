@@ -28,7 +28,7 @@ fi
 clean_thresh=0.3
 
 if [[ $n_iter -gt 0 ]]; then
-   options="-joinpolarizations"
+   options="-join-polarizations"
 fi
 
 imagesize=2048

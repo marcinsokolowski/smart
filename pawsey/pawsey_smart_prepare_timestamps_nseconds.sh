@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # WARNING : programs azh2radec and date2date are probably not compiled on galaxy/magnus ..., but I can do it ...
-# Example : sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh 1278106408
+# Example : sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps_nseconds.sh 1278106408
 
 #SBATCH --account=pawsey0348
 #SBATCH --account=mwavcs
@@ -9,8 +9,8 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
 #SBATCH --mem=16gb
-#SBATCH --output=./smart.o%j
-#SBATCH --error=./smart.e%j
+#SBATCH --output=./smart_nseconds.o%j
+#SBATCH --error=./smart_nseconds.e%j
 #SBATCH --export=NONE
 
 echo "DEBUG : COMP = $COMP"
@@ -76,6 +76,12 @@ if [[ -n "$7" && "$7" != "-" ]]; then
    remote_dir=$7
 fi
 
+# number of seconds per CASA ms and image :
+n_seconds=60
+if [[ -n "$8" && "$8" != "-" ]]; then
+   n_seconds=$8
+fi
+
 
 force=0
 
@@ -90,6 +96,7 @@ echo "alt               = $alt"
 echo "n_channels        = $n_channels"
 echo "force             = $force"
 echo "remote_dir        = $remote_dir"
+echo "n_seconds         = $n_seconds"
 echo "#################################################################################"
 
 # just to reflect on the parameters (check if correct)
@@ -127,11 +134,17 @@ cd ${processing_dir}
 pwd
 date
 
-while read line # example 
+# split to jobs (list of timestamps per job) : 
+echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh ${n_seconds}"
+$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh ${n_seconds}
+
+# generate metafits files per job :
+for tfile in `ls timestamps_?????.txt`
 do
-   t=$line
+   t=`head -1 $tfile`
+   n_seconds=`cat $tfile | wc -l`
    
-   if [[ ! -s ${t}.metafits || $force -gt 0 ]]; then    
+   if [[ ! -s ${t}.metafits || $force -gt 0 ]]; then
       t_dtm=`echo $t | awk '{print substr($1,1,8)"_"substr($1,9);}'`
       t_dateobs=`echo $t | awk '{print substr($1,1,4)"-"substr($1,5,2)"-"substr($1,7,2)"T"substr($1,9,2)":"substr($1,11,2)":"substr($1,13,2);}'`
       t_ux=`date2date -ut2ux=${t_dtm} | awk '{print $3;}'`
@@ -140,18 +153,19 @@ do
       echo "azh2radec $t_ux mwa $azim $alt"
       ra=`azh2radec $t_ux mwa $azim $alt | awk '{print $4;}'`
       dec=`azh2radec $t_ux mwa $azim $alt | awk '{print $6;}'`
-   
+
       cp $metafits ${t}.metafits
-      echo "python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec --n_channels=${n_channels}"
-      python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec  --n_channels=${n_channels}
+      echo "python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec --n_channels=${n_channels} --n_scans=${n_seconds}"
+      python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec  --n_channels=${n_channels} --n_scans=${n_seconds}
    else
       echo "INFO : ${t}.metafits already exists -> ignored"
    fi   
-done < timestamps.txt
+done
 
 
-echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh 50"
-$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh 50
+
+# echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh ${n_seconds}"
+# $SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh ${n_seconds}
 
 if [[ -n "$remote_dir" ]]; then
    echo "INFO : copying resulting metafits files and timestamp files to remote directory : $remote_dir"

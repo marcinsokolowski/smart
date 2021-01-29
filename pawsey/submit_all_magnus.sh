@@ -41,13 +41,43 @@ if [[ -n "$6" && "$6" != "-" ]]; then
 fi
 
 vis_dir=/astro/mwavcs/vcs/${obsid}/vis
-if [[ -n "$7" && "$7" != "-" ]]; then  
+if [[ -n "$7" && "$7" != "-" ]]; then
    vis_dir=$7
 fi
-   
+
+do_remove=1
+if [[ -n "$8" && "$8" != "-" ]]; then
+   do_remove=$8
+fi   
+
+wsclean_type="standard"
+if [[ -n "${9}" && "${9}" != "-" ]]; then
+   wsclean_type=${9}
+fi
+
+wsclean_pbcorr=0
+if [[ -n "${10}" && "${10}" != "-" ]]; then
+   wsclean_pbcorr=${10}
+fi
+
+n_iter=10000 # 100000 too much 
+if [[ -n "${11}" && "${11}" != "-" ]]; then
+   n_iter=${11}
+fi
+
+echo "#####################################################"
+echo "PARAMETERS :"
+echo "#####################################################"
+echo "wsclean_type   = $wsclean_type"
+echo "wsclean_pbcorr = $wsclean_pbcorr"
+echo "n_iter         = $n_iter"
+echo "#####################################################"
+
+
 if [[ -d data || -L data ]]; then
    echo "INFO : data subdirectory / link already exists -> nothing to be done"
 else
+   # THIS NEEDS TO BE FIXED !!!
    echo "WARNING : data subdirectory does not exist -> creating a link for user = $USER :"
    if [[ $USER == "msok" ]]; then
       if [[ $cluster != "mwa" && $cluster != "garrawarla" ]]; then # mwa = garrawarla
@@ -63,7 +93,6 @@ else
          echo "cp -a /astro/mwavcs/susmita/code/mwa_pb/data ."
          cp -a /astro/mwavcs/susmita/code/mwa_pb/data .
       fi
-                                             
       echo "$USER : ln -s ~/github/mwa_pb/data"
       ln -s ~/github/mwa_pb/data
    fi
@@ -88,9 +117,8 @@ do
    fi
    
    # /astro/mwaops/vcs/ -> /astro/mwavcs/vcs/1275085816/vis/
-   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep_magnus.sh - - ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last"
-   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep_magnus.sh - - ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last
-
+   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter}"
+   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter}
 
 #   echo "mv ${timestep_file} ${timestep_file}.SUBMITTED"
 #   mv ${timestep_file} ${timestep_file}.SUBMITTED

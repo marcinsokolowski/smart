@@ -27,7 +27,7 @@ i=0
 while [[ $i -lt $n_jobs ]];
 do
    outfile=`echo $i | awk -v out_basename=${out_basename} '{printf("%s_%05d.txt",out_basename,$1);}'`   
-   awk -v n_timesteps=${n_images_per_job} -v n_jobs=${n_jobs} -v job=${i} 'BEGIN{start_record=job*n_timesteps;end_record=start_record+n_timesteps;}{if(NR>=start_record && NR<end_record){print $0;}}' ${timesteps_file} > ${outfile}
+   awk -v n_timesteps=${n_images_per_job} -v n_jobs=${n_jobs} -v job=${i} 'BEGIN{start_record=job*n_timesteps+1;end_record=start_record+n_timesteps;}{if(NR>=start_record && NR<end_record){print $0;}}' ${timesteps_file} > ${outfile}
    
    echo "$i : $outfile"
 

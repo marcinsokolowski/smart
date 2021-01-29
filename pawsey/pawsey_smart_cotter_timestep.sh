@@ -9,15 +9,13 @@
 
 #SBATCH --account=pawsey0348
 #SBATCH --account=mwavcs
-#SBATCH --time=12:00:00
+#SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
-#SBATCH --mem=16gb
+#SBATCH --mem=120gb
 #SBATCH --output=./smart.o%j
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
-
-echo "source $HOME/smart/bin/$COMP/env"
 source $HOME/smart/bin/$COMP/env
 
 
@@ -58,6 +56,7 @@ do_remove=1
 if [[ -n "$2" && "$2" != "-" ]]; then
    do_remove=$2
 fi
+do_remove_gpufits=1
 
 # /astro/mwaops/vcs/1255444104/vis 
 #galaxy_path=/astro/mwaops/vcs/1150234552/vis
@@ -72,7 +71,7 @@ fi
 if [[ -n "$3" && "$3" != "-" ]]; then # SHOULD REALLY BE EARLIER BUT IS HERE TO BE ABLE TO USE DEFAULT LOCATION :
    galaxy_path=$3
 else
-   galaxy_path=/astro/mwaops/vcs/${obsid}/cal/${calid}/vis
+   galaxy_path=/astro/mwaops/vcs/${obsid}/vis
 fi
 
 calid=1150234232
@@ -114,6 +113,24 @@ if [[ -n "${11}" && "${11}" != "-" ]]; then
    is_last=${11}
 fi
 
+# 12 param skipped 
+
+wsclean_type="standard"
+if [[ -n "${13}" && "${13}" != "-" ]]; then
+   wsclean_type=${13}
+fi
+
+wsclean_pbcorr=0
+if [[ -n "${14}" && "${14}" != "-" ]]; then
+   wsclean_pbcorr=${14}
+fi
+
+n_iter=10000 # 100000 too much 
+if [[ -n "${15}" && "${15}" != "-" ]]; then
+   n_iter=${15}
+fi
+
+
 peel_model_file="peel_model.txt"
 
 edge=80 # or 160 kHz of excised edge channels ?
@@ -123,20 +140,23 @@ force=0
 echo "#############################################"
 echo "PARAMETERS :"
 echo "#############################################"
-echo "timestamp_file = $timestamp_file"
-echo "do_scp      = $do_scp"
-echo "do_remove   = $do_remove"
-echo "galaxy_path = $galaxy_path ( at computer = $comp )"
-echo "obsid       = $obsid"
-echo "calid       = $calid"
-echo "object      = $object"
-echo "beam_corr_type = $beam_corr_type"
-echo "timestamp_file = $timestamp_file"
-echo "computer    = $comp"
-echo "subdirs     = $subdirs"
-echo "is_last     = $is_last"
-echo "edge        = $edge"
+echo "timestamp_file  = $timestamp_file"
+echo "do_scp          = $do_scp"
+echo "do_remove       = $do_remove"
+echo "galaxy_path     = $galaxy_path ( at computer = $comp )"
+echo "obsid           = $obsid"
+echo "calid           = $calid"
+echo "object          = $object"
+echo "beam_corr_type  = $beam_corr_type"
+echo "timestamp_file  = $timestamp_file"
+echo "computer        = $comp"
+echo "subdirs         = $subdirs"
+echo "is_last         = $is_last"
+echo "edge            = $edge"
 echo "peel_model_file = $peel_model_file"
+echo "wsclean_type    = $wsclean_type"
+echo "wsclean_pbcorr  = $wsclean_pbcorr"
+echo "n_iter          = $n_iter"
 echo "#############################################"
 
 
@@ -159,6 +179,7 @@ if [[ ! -s ${calid}.cal ]]; then
    if [[ $bin_count -le 0 ]]; then
       if [[ $calid -gt 0 ]]; then
          # http://mro.mwa128t.org/ -> wget "http://ws.mwatelescope.org/calib/get_calfile_for_calid?cal_id=${obs}" 
+         # Does this one require a change ???
          echo "wget \"http://ws.mwatelescope.org/calib/get_calfile_for_calid?cal_id=${calid}\" -O solutions.zip"
          wget "http://ws.mwatelescope.org/calib/get_calfile_for_calid?cal_id=${calid}" -O solutions.zip
       else
@@ -166,8 +187,22 @@ if [[ ! -s ${calid}.cal ]]; then
          wget "http://ws.mwatelescope.org/calib/get_calfile_for_obsid?obs_id=${obsid}&zipfile=1&add_request=1${options}" -O solutions.zip
       fi
 
+      if [[ -s solutions.zip ]]; then
+         echo "DEBUG : cal solutions downloaded ok -> unzipping"
+      else
+         echo "WARNING : cal solutions for obsid=$obsid or calid=$calid not found in ASVO database -> submitting request"
+
+         if [[ $calid -gt 0 ]]; then
+            echo "wget \"http://ws.mwatelescope.org/calib/get_calfile_for_obsid?obs_id=${calid}&zipfile=1&add_request=1${options}\" -O solutions.zip"
+            wget "http://ws.mwatelescope.org/calib/get_calfile_for_obsid?obs_id=${calid}&zipfile=1&add_request=1${options}" -O solutions.zip
+         else
+            echo "INFO : request should already be correctly submitted with the previous wget command"
+         fi
+      fi
+
       echo "unzip solutions.zip"
       unzip solutions.zip
+            
 
       ls -al *.bin
       bin_count=`ls *.bin | wc -l`
@@ -176,10 +211,17 @@ if [[ ! -s ${calid}.cal ]]; then
          exit;
       else
          echo "INFO : calibration solutions found"
-         bin_file=`ls *.bin | tail -1`
+         
+         bin_file=${calid}.bin
+         if [[ -s ${bin_file} ]]; then
+            echo "INFO : ${bin_file} exists -> it will be used"
+         else
+            echo "WARNING : ${bin_file} does not exist -> trying to use other bin file"
+            bin_file=`ls *.bin | tail -1`
 
-         echo "ln -s ${bin_file} ${calid}.bin"
-         ln -s ${bin_file} ${calid}.bin
+            echo "ln -s ${bin_file} ${calid}.bin"
+            ln -s ${bin_file} ${calid}.bin
+         fi
       fi
       
       if [[ -s flagged_tiles.txt ]]; then
@@ -262,9 +304,12 @@ do
                rsync -avP ${galaxy_path}/${obsid}_${timestamp}*.fits .
             fi
    
+            date
+            ls -al 
+   
             # 2020-07-11 - -norfi removed 
-            echo "$srun_command cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            $srun_command cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
 
             if [[ -d ${obsid}_${timestamp}.ms ]]; then   
                date   
@@ -293,12 +338,13 @@ do
                   echo "casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}"
                   casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}
               else
-                  which applysolutions
-                  echo "applysolutions ${obsid}_${timestamp}.ms ${bin_file}"
-                  applysolutions ${obsid}_${timestamp}.ms ${bin_file}
+#                  which applysolutions
+#                  echo "applysolutions ${obsid}_${timestamp}.ms ${bin_file}"
+#                  applysolutions ${obsid}_${timestamp}.ms ${bin_file}
+                   echo "WARNING : apply solutions is now performed in cotter - using option -full-apply ${bin_file}"
               fi
       
-              if [[ 1 -gt 0 ]]; then
+              if [[ $do_remove -gt 0 || $do_remove_gpufits -gt 0 ]]; then
                   echo "rm -fr ${obsid}_${timestamp}*.fits"
                   rm -fr ${obsid}_${timestamp}*.fits
               else
@@ -318,8 +364,9 @@ do
 #             /home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h34m08.9s -07d21m53.409s
 
               # see above : for mwa-process02 /home/msok/mwa_software/anoko/anoko/chgcentre/build/ is added to PATH
-                 echo "chgcentre ${casa_ms} ${object}"
-                 chgcentre ${casa_ms} ${object}
+                  echo "INFO : phase center is now performed in cotter"   
+#                 echo "chgcentre ${casa_ms} ${object}"
+#                 chgcentre ${casa_ms} ${object}
                date
             fi
          
@@ -340,8 +387,28 @@ do
            fi
 
             # OLD script : wsclean_auto.sh 
-            echo "$SMART_DIR/bin/wsclean_auto_optimised_test.sh ${obsid}_${timestamp}.ms - 0 ${beam_corr_type} ${imagesize}"
-            $SMART_DIR/bin/wsclean_auto_optimised_test.sh ${obsid}_${timestamp}.ms - 0 ${beam_corr_type} ${imagesize}
+            if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then
+               echo "$SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}"
+               $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}
+            else
+#               if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
+#                  echo "$SMART_DIR/bin/wsclean_auto_optimised_test.sh ${obsid}_${timestamp}.ms - 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
+#                  $SMART_DIR/bin/wsclean_auto_optimised_test.sh ${obsid}_${timestamp}.ms - 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
+#               else
+                  if [[ "$wsclean_type" == "jay" || "$wsclean_type" == "jay8096" ]]; then
+                     if [[ "$wsclean_type" == "jay" ]]; then
+                        echo "time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
+                        time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
+                     fi
+#                     if [[ "$wsclean_type" == "jay8096" ]]; then
+#                        echo "time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096"
+#                        time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096
+#                     fi
+                  else 
+                     echo "ERROR : wsclean_type = $wsclean_type unknown"
+                  fi
+#               fi
+            fi
          else
             echo "WARNING : CASA ms already exists -> skipped"
          fi   
@@ -368,3 +435,7 @@ if [[ $is_last -gt 0 ]]; then
 fi
 
 
+if [[ $is_last -gt 0 ]]; then
+   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh"
+   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh   
+fi

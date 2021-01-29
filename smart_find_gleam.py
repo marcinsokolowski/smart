@@ -635,12 +635,22 @@ def select_gleam_sources( fitsname ) :
 
    return (RA,Dec,gleam_sources,gleam_fluxes,radius) 
 
-def find_max( data, xc, yc, radius=5 ) :
+def find_max( data, xc_float, yc_float, radius=5 ) :
+
+   xc = int(xc_float)
+   yc = int(yc_float)
 
    x_size = data.shape[0]
    y_size = data.shape[1]
+   
+   x_max = None
+   y_max = None
 
    max_val = -1e20
+   
+   out_f_image = open("image.reg","a+")
+   out_f_gleam = open("gleam.reg","a+")
+   
    for y in range( yc-radius, yc+radius+1 ) :
       for x in range( xc-radius, xc+radius+1 ) :
          dist = math.sqrt( (x-xc)*(x-xc) + (y-yc)*(y-yc) )
@@ -649,6 +659,25 @@ def find_max( data, xc, yc, radius=5 ) :
             if not np.isnan( data[x,y] ) :
                if data[x,y] > max_val :
                   max_val = data[x,y]
+                  x_max = x
+                  y_max = y
+                  
+   if x_max is not None and y_max is not None : 
+      xc_float = xc_float - 1
+      yc_float = yc_float - 1
+   
+      offset_x = (x_max - xc_float)
+      offset_y = (y_max - yc_float)      
+      print("DEBUG_OFFSET : (x_max,y_max) = (%.2f,%.2f) vs. (x_gleam,y_gleam) = (%.2f,%.2f) -> offset = ( %.4f , %.4f ) pixels , max_val = %.4f" % (x_max,y_max,xc_float,yc_float,offset_x,offset_y,max_val))
+      
+      line_image = ("circle %.2f %.2f 1 # %.4f %.4f\n" % (y_max+1,x_max+1,offset_y,offset_x))
+      out_f_image.write( line_image )
+
+      line_gleam = ("circle %.2f %.2f 1 # %.4f %.4f\n" % (yc_float+1,xc_float+1,offset_y,offset_x))
+      out_f_gleam.write( line_gleam )
+
+   out_f_image.close()
+   out_f_gleam.close()
                
    return max_val
 
@@ -711,7 +740,7 @@ def gleam2reg_base( fitsname, RA, Dec, gleam_sources, gleam_fluxes, radius, regf
 
             image_flux = None
             if not np.isnan(x) and not np.isnan(y) :
-               image_flux = find_max( data, int(y), int(x), radius=10 )
+               image_flux = find_max( data, y, x, radius=10 )
             else :
                print("WARNING : NaN detected in x or y -> skipped this object")
                continue

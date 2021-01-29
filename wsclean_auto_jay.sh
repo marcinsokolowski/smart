@@ -11,9 +11,9 @@ ms_b=${ms%%.ms}
 
 options=""
 n_iter=100000
-#if [[ -n "$2" && "$2" != "-" ]]; then
-#   n_iter=$2
-#fi
+if [[ -n "$2" && "$2" != "-" ]]; then
+   n_iter=$2
+fi
 
 do_casa=0
 if [[ -n "$3" && "$3" != "-" ]]; then
@@ -31,7 +31,7 @@ if [[ $n_iter -gt 0 ]]; then
    options="-join-polarizations"
 fi
 
-imagesize=2048
+imagesize=8096
 if [[ -n "$5" && "$5" != "-" ]]; then
    imagesize=$5
 fi
@@ -47,13 +47,11 @@ fi
 
 peel_model_file="peel_model.txt"
 
-
 echo "###########################################################"
 echo "PARAMETERS:"
 echo "###########################################################"
 echo "wsclean_pbcorr = $wsclean_pbcorr ( wsclean_beam_opt = $wsclean_beam_opt )"
 echo "###########################################################"
-
 
 special_python_path=`which python`
 # chgcentre_path=""
@@ -139,6 +137,9 @@ fi
 # echo "wsclean -name wsclean_${obsid} -j $NCPUS -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 # wsclean -name wsclean_${obsid} -j $NCPUS -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
+# pixscale="-scale 16asec" vs. I have 20 arcsec
+clean="-multiscale -mgain 0.8 -niter $n_iter -auto-mask 3 -auto-threshold 1.2 -local-rms -circular-beam"
+
 # if [[ $obsnum -gt 1219795217 ]]; then
 if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper condition 
     # gps >= 20180901_000000 1219795217  -> compact configuration 
@@ -147,8 +148,8 @@ if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper cond
     # echo "GPS time > 1219795217 ( 20180901_000000 ) -> using COMPACT CONFIGURATION SETTINGS"
     echo "max_baseline_int = $max_baseline_int < 2800 -> using COMPACT CONFIGURATION SETTINGS"
     
-    echo "time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 -mfs-weighting $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8 -minuv-l 30 ${options} ${ms}"
-    time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 -mfs-weighting $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8 -minuv-l 30 ${options} ${ms}
+    echo "time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}"
+    time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}
 else
     # GPS time <= 1219795217 ( 20180901_000000 ) -> using LONG-BASELINES SETTINGS"
     echo "max_baseline_int = $max_baseline_int >= 2800 -> using LONG-BASELINES SETTINGS"
@@ -162,8 +163,8 @@ else
 #    wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
     # mgain 0.5 or 0.85 
-    echo "time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 -mfs-weighting $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8 -minuv-l 30 ${options} ${ms}"
-    time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 -mfs-weighting $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8 -minuv-l 30 ${options} ${ms}
+    echo "time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}"
+    time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}
 fi    
 
 fits_xx=wsclean_${ms_b}_briggs-XX-${beam_corr_type}.fits
@@ -173,8 +174,8 @@ fits_xyi=wsclean_${ms_b}_briggs-XYi-${beam_corr_type}.fits
 bname=wsclean_${ms_b}_briggs
 
 if [[ $wsclean_pbcorr -gt 0 ]]; then
-   echo "INFO : primary beam correction already executed by wsclean"
-else
+   echo "INFO : primary beam correction already execute"
+else   
    echo "time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm"
    time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm
 fi   

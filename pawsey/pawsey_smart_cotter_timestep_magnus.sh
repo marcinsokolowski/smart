@@ -261,8 +261,8 @@ do
             fi
    
             # 2020-07-11 - -norfi removed 
-            echo "$srun_command cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            $srun_command cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
 
             if [[ -d ${obsid}_${timestamp}.ms ]]; then   
                date   
@@ -291,9 +291,10 @@ do
                   echo "casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}"
                   casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}
               else
-                  which applysolutions
-                  echo "applysolutions ${obsid}_${timestamp}.ms ${bin_file}"
-                  applysolutions ${obsid}_${timestamp}.ms ${bin_file}
+                  echo "INFO : applysolutions is performed in cotter -full-apply"
+#                  which applysolutions
+#                  echo "applysolutions ${obsid}_${timestamp}.ms ${bin_file}"
+#                  applysolutions ${obsid}_${timestamp}.ms ${bin_file}
               fi
       
               if [[ $do_remove -gt 0 ]]; then

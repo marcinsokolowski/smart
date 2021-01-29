@@ -8,14 +8,16 @@
 #    Paste SBATCH lines into new version of pawsey_smart_cotter_timestep.sh and add -l in #!/bin/bash -l line 
 
 #SBATCH --account=pawsey0348
-#SBATCH --time=02:00:00
+#SBATCH --account=mwavcs
+#SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
-#SBATCH --mem=16gb
-#SBATCH --output=./smartimage.o%j
-#SBATCH --error=./smartimage.e%j
+#SBATCH --mem=128gb
+#SBATCH --output=./smartimagelist.o%j
+#SBATCH --error=./smartimagelist.e%j
 #SBATCH --export=NONE
-source $HOME/smart/bin/magnus/env
+
+source $HOME/smart/bin/$COMP/env
 
 
 # requirements :
@@ -117,6 +119,22 @@ if [[ -n "${12}" && "${12}" != "-" ]]; then
    outdir="${12}"
 fi
 
+wsclean_type="standard"
+if [[ -n "${13}" && "${13}" != "-" ]]; then
+   wsclean_type=${13}
+fi
+
+wsclean_pbcorr=0
+if [[ -n "${14}" && "${14}" != "-" ]]; then
+   wsclean_pbcorr=${14}
+fi
+
+n_iter=10000 # 100000 too much 
+if [[ -n "${15}" && "${15}" != "-" ]]; then
+   n_iter=${15}
+fi
+
+
 peel_model_file="peel_model.txt"
 
 
@@ -142,6 +160,7 @@ echo "is_last     = $is_last"
 echo "edge        = $edge"
 echo "outdir      = $outdir"
 echo "peel_model_file = $peel_model_file"
+echo "wsclean_type = $wsclean_type"
 echo "#############################################"
 
 pwd
@@ -300,8 +319,10 @@ else
                 coarse_ch_str=`echo $coarse_ch | awk '{printf("%02d\n",$1);}'`
                 
                 
-                echo "ln -s ${galaxy_path}/${obsid}_${timestamp}_gpubox${coarse_ch_str}_00.fits ${obsid}_${first_timestamp}_gpubox${coarse_ch_str}_${time_str}.fits"
-                ln -s ${galaxy_path}/${obsid}_${timestamp}_gpubox${coarse_ch_str}_00.fits ${obsid}_${first_timestamp}_gpubox${coarse_ch_str}_${time_str}.fits
+#                echo "ln -s ${galaxy_path}/${obsid}_${timestamp}_gpubox${coarse_ch_str}_00.fits ${obsid}_${first_timestamp}_gpubox${coarse_ch_str}_${time_str}.fits"
+#                ln -s ${galaxy_path}/${obsid}_${timestamp}_gpubox${coarse_ch_str}_00.fits ${obsid}_${first_timestamp}_gpubox${coarse_ch_str}_${time_str}.fits
+                echo "ln -s ${galaxy_path}/${obsid}_${timestamp}_gpubox${coarse_ch_str}_00.fits ${obsid}_${timestamp}_gpubox${coarse_ch_str}_${time_str}.fits"
+                ln -s ${galaxy_path}/${obsid}_${timestamp}_gpubox${coarse_ch_str}_00.fits ${obsid}_${timestamp}_gpubox${coarse_ch_str}_${time_str}.fits
              
                 coarse_ch=$(($coarse_ch+1))
              done  
@@ -310,8 +331,12 @@ else
          done
    
          # 2020-07-11 - -norfi removed 
-         echo "cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${first_timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${first_timestamp}.ms ${obsid}_*gpubox*.fits"
-         cotter -absmem 64 -j 12 -timeres 4 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${first_timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -o ${obsid}_${first_timestamp}.ms ${obsid}_*gpubox*.fits   
+         date
+         pwd
+         which cotter
+         echo "time cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${first_timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${first_timestamp}.ms ${obsid}_*gpubox*.fits"
+         time cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${first_timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${first_timestamp}.ms ${obsid}_*gpubox*.fits   
+         date
 
          if [[ -d ${obsid}_${first_timestamp}.ms ]]; then   
             date   
@@ -340,9 +365,10 @@ else
                echo "casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${first_timestamp}.ms ${cal}"
                casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${first_timestamp}.ms ${cal}
            else
-               which applysolutions
-               echo "applysolutions ${obsid}_${first_timestamp}.ms ${bin_file}"
-               applysolutions ${obsid}_${first_timestamp}.ms ${bin_file}
+               echo "INFO : applysolutions is performed in cotter -full-apply"
+#               which applysolutions
+#               echo "applysolutions ${obsid}_${first_timestamp}.ms ${bin_file}"
+#               applysolutions ${obsid}_${first_timestamp}.ms ${bin_file}
            fi
       
            if [[ $do_remove -gt 0 ]]; then
@@ -365,8 +391,9 @@ else
 #             /home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h34m08.9s -07d21m53.409s
 
               # see above : for mwa-process02 /home/msok/mwa_software/anoko/anoko/chgcentre/build/ is added to PATH
-             echo "chgcentre ${casa_ms} ${object}"
-             chgcentre ${casa_ms} ${object}
+#             echo "time chgcentre ${casa_ms} ${object}"
+#             time chgcentre ${casa_ms} ${object}
+              echo "WARNING : chgcentre done by cotter !"
            date
         fi
          
@@ -387,8 +414,25 @@ else
         fi
 
         # OLD script : wsclean_auto.sh 
-        echo "$SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} ${imagesize}"
-        $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} ${imagesize}
+        # $SMART_DIR/bin/wsclean_auto_optimised_test.sh - terrible images see : /media/msok/0754e982-0adb-4e33-80cc-f81dda1580c8/mwa/smart/j0036/60sec/Garrawarla_test/1278106408/60sec/FINAL/DEEP/20200706213412 
+        # 20201201_60sec_images_of_1278106408_FINAL.odt
+        date
+        if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then        
+           echo "time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}"
+           time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}
+        else 
+           if [[ "$wsclean_type" == "jay" ]]; then
+              echo "time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
+              time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
+           else
+              echo "WARNING : unknown WSCLEAN type $wsclean_type"
+           fi
+#           if [[ "$wsclean_type" == "jay8096" ]]; then
+#              echo "time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096"
+#              time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096
+#           fi
+        fi
+        date
       else
         echo "WARNING : CASA ms already exists -> skipped"
       fi   

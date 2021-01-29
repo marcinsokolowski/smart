@@ -10,7 +10,7 @@ metafits_base=`echo $ms | cut -b 12-25`
 ms_b=${ms%%.ms}
 
 options=""
-n_iter=10000
+n_iter=10000 # 100000 too much 
 if [[ -n "$2" && "$2" != "-" ]]; then
    n_iter=$2
 fi
@@ -25,16 +25,31 @@ if [[ -n "$4" && "$4" != "-" ]]; then
    beam_corr_type=$4
 fi
 
-clean_thresh=0.050
+clean_thresh=0.050 # with 0.020 looks rubbish
 
 if [[ $n_iter -gt 0 ]]; then
-   options="-joinpolarizations"
+   options="-join-polarizations"
 fi
 
 imagesize=2048
 if [[ -n "$5" && "$5" != "-" ]]; then
    imagesize=$5
 fi
+
+wsclean_pbcorr=0
+wsclean_beam_opt="-pol XX,YY,XY,YX"
+if [[ -n "$6" && "$6" != "-" ]]; then
+   wsclean_pbcorr=$6
+fi
+if [[ $wsclean_pbcorr -gt 0 ]]; then
+   wsclean_beam_opt="-apply-primary-beam -mwa-path /pawsey/mwa -pol i,q,u,v"
+fi
+
+wsclean_type="standard"
+if [[ -n "$7" && "$7" != "-" ]]; then
+   wsclean_type=$7
+fi
+
 
 peel_model_file="peel_model.txt"
 
@@ -116,10 +131,24 @@ else
    echo "WARNING : file ${peel_model_file} does not exist -> no peeling required"
 fi
 
+clean="-scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85"
+if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
+   clean="-mfs-weighting -scale $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8"
+fi
+
+echo "###########################################################"
+echo "PARAMETERS:"
+echo "###########################################################"
+echo "wsclean_type   = $wsclean_type"
+echo "wsclean_pbcorr = $wsclean_pbcorr ( wsclean_beam_opt = $wsclean_beam_opt )"
+echo "clean          = $clean"
+echo "###########################################################"
+
 
 # old 
 # echo "wsclean -name wsclean_${obsid} -j $NCPUS -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 # wsclean -name wsclean_${obsid} -j $NCPUS -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -niter ${n_iter} ${options} ${ms}
+
 
 # if [[ $obsnum -gt 1219795217 ]]; then
 if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper condition 
@@ -129,8 +158,8 @@ if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper cond
     # echo "GPS time > 1219795217 ( 20180901_000000 ) -> using COMPACT CONFIGURATION SETTINGS"
     echo "max_baseline_int = $max_baseline_int < 2800 -> using COMPACT CONFIGURATION SETTINGS"
     
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}"
-    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}"
+    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}
 else
     # GPS time <= 1219795217 ( 20180901_000000 ) -> using LONG-BASELINES SETTINGS"
     echo "max_baseline_int = $max_baseline_int >= 2800 -> using LONG-BASELINES SETTINGS"
@@ -143,8 +172,8 @@ else
 #    echo "wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 #    wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}"
-    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85 -minuv-l 30 ${options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}"
+    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}
 fi    
 
 fits_xx=wsclean_${ms_b}_briggs-XX-${beam_corr_type}.fits
@@ -153,8 +182,12 @@ fits_xy=wsclean_${ms_b}_briggs-XY-${beam_corr_type}.fits
 fits_xyi=wsclean_${ms_b}_briggs-XYi-${beam_corr_type}.fits
 bname=wsclean_${ms_b}_briggs
 
-echo "time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm"
-time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm
+if [[ $wsclean_pbcorr -gt 0 ]]; then
+   echo "INFO : primary beam correction already executed by wsclean"
+else
+   echo "time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm"
+   time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm
+fi   
 
 
 # long baselines :

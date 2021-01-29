@@ -68,7 +68,14 @@ def parse_options(idx=0):
 
    return (options, args)
 
-
+def azh2radec( uxtime, azim, alt, site="MWA", frame='icrs' ) :
+   ut_time = Time( uxtime ,format='unix')
+   newAltAzcoordiantes = SkyCoord(alt = alt, az = azim, obstime = ut_time, frame = 'altaz', unit='deg', location=MWA_POS )
+   altaz = newAltAzcoordiantes.transform_to( frame )
+   ra_deg, dec_deg = altaz.ra.deg, altaz.dec.deg
+   print("(RA,DEC) = ( %.8f , %.8f )" % (ra_deg,dec_deg))
+   
+   return ( ra_deg, dec_deg )
 
 
 
@@ -94,30 +101,29 @@ if __name__ == "__main__":
    if len(sys.argv) > 5: 
       frame = sys.argv[5]
 
+   
+   ( ra_deg, dec_deg ) = azh2radec( uxtime, azim, alt, site=site, frame=frame )
       
-      
-#   print( "%.2f %.4f %.4f" % (uxtime,ra,dec) )
+##   print( "%.2f %.4f %.4f" % (uxtime,ra,dec) )
 
-   ut_time = Time( uxtime ,format='unix')
+#   ut_time = Time( uxtime ,format='unix')
 
-#   coord = SkyCoord( azim, alt, equinox='J2000',frame='altaz', unit='deg')
-#   coord = SkyCoord( azim, alt, frame='altaz', unit='deg')
+##   coord = SkyCoord( azim, alt, equinox='J2000',frame='altaz', unit='deg')
+##   coord = SkyCoord( azim, alt, frame='altaz', unit='deg')
 
    # https://docs.astropy.org/en/stable/api/astropy.coordinates.AltAz.html   
-#   coord = AltAz(alt=alt, az=azim, obstime=Time( uxtime, scale='utc', format="unix" ), location=MWA_POS, unit='deg' )
-#   coord.location = MWA_POS
-#   coord.obstime = Time( uxtime, scale='utc', format="unix" )
-#   altaz = coord.transform_to('icrs')
+##   coord = AltAz(alt=alt, az=azim, obstime=Time( uxtime, scale='utc', format="unix" ), location=MWA_POS, unit='deg' )
+##   coord.location = MWA_POS
+##   coord.obstime = Time( uxtime, scale='utc', format="unix" )
+##   altaz = coord.transform_to('icrs')
+##   ra_deg, dec_deg = altaz.ra.deg, altaz.dec.deg
+   
+##   print("(RA,DEC) = ( %.8f , %.8f )" % (ra_deg,dec_deg))
+
+
+#   newAltAzcoordiantes = SkyCoord(alt = alt, az = azim, obstime = ut_time, frame = 'altaz', unit='deg', location=MWA_POS )
+##   newAltAzcoordiantes.coord = MWA_POS
+#   altaz = newAltAzcoordiantes.transform_to( frame )
 #   ra_deg, dec_deg = altaz.ra.deg, altaz.dec.deg
-   
 #   print("(RA,DEC) = ( %.8f , %.8f )" % (ra_deg,dec_deg))
-
-
-   newAltAzcoordiantes = SkyCoord(alt = alt, az = azim, obstime = ut_time, frame = 'altaz', unit='deg', location=MWA_POS )
-#   newAltAzcoordiantes.coord = MWA_POS
-   altaz = newAltAzcoordiantes.transform_to( frame )
-   ra_deg, dec_deg = altaz.ra.deg, altaz.dec.deg
-   print("(RA,DEC) = ( %.8f , %.8f )" % (ra_deg,dec_deg))
-
-   
    
