@@ -136,7 +136,7 @@ fi
 
 
 peel_model_file="peel_model.txt"
-
+keep_casa_ms=1
 
 edge=80 # or 160 kHz of excised edge channels ?
 
@@ -161,6 +161,7 @@ echo "edge        = $edge"
 echo "outdir      = $outdir"
 echo "peel_model_file = $peel_model_file"
 echo "wsclean_type = $wsclean_type"
+echo "keep_casa_ms = $keep_casa_ms"
 echo "#############################################"
 
 pwd
@@ -440,7 +441,7 @@ else
       echo "Image $wsclean_fits_file already exists -> skipped"
    fi
 
-   if [[ $do_remove -gt 0 ]]; then
+   if [[ $do_remove -gt 0 && $keep_casa_ms -le 0 ]]; then
       echo "rm -fr ${obsid}_${first_timestamp}.ms ${obsid}_${first_timestamp}.ms.flag*"
       rm -fr ${obsid}_${first_timestamp}.ms ${obsid}_${first_timestamp}.ms.flag*   
    fi
