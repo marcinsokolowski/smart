@@ -154,8 +154,8 @@ python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid
 
 
 # 2021-04-21 : was 50 -> 5 
-echo "${smart_bin}/pawsey/split_timesteps_to_jobs.sh 5"
-${smart_bin}/pawsey/split_timesteps_to_jobs.sh 5
+echo "${smart_bin}/pawsey/split_timesteps_to_jobs.sh 50
+${smart_bin}/pawsey/split_timesteps_to_jobs.sh 50
 
 if [[ -n "$remote_dir" ]]; then
    echo "INFO : copying resulting metafits files and timestamp files to remote directory : $remote_dir"
