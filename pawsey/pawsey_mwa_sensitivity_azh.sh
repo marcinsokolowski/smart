@@ -44,6 +44,11 @@ if [[ -n "$5" && "$5" != "-" ]]; then
    gpstime=$5
 fi
 
+inttime=1
+if [[ -n "$6" && "$6" != "-" ]]; then
+   inttime=$6
+fi
+
 echo "##########################################################################"
 echo "PARAMETERS :"
 echo "##########################################################################"
@@ -51,6 +56,7 @@ echo "obsid = $obsid"
 echo "(az,za) = ($az,$za) [deg]"
 echo "Frequency channel = $freq_cc"
 echo "gpstime = $gpstime"
+echo "inttime = $inttime [sec]"
 echo "##########################################################################"
 
 
@@ -63,5 +69,5 @@ else
    echo "INFO : metafits file ${obsid}.metafits already exists"
 fi
 
-echo "python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=1 --bandwidth=30720000 --pointing_az_deg=${az} --pointing_za_deg=${za}"
-python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=1 --bandwidth=30720000 --pointing_az_deg=${az} --pointing_za_deg=${za}
+echo "python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=${inttime} --bandwidth=30720000 --pointing_az_deg=${az} --pointing_za_deg=${za}"
+python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=${inttime} --bandwidth=30720000 --pointing_az_deg=${az} --pointing_za_deg=${za}
