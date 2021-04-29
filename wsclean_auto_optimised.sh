@@ -150,6 +150,7 @@ echo "###########################################################"
 # wsclean -name wsclean_${obsid} -j $NCPUS -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
 
+ux_start=`date +%s`
 # if [[ $obsnum -gt 1219795217 ]]; then
 if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper condition 
     # gps >= 20180901_000000 1219795217  -> compact configuration 
@@ -175,6 +176,10 @@ else
     echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}"
     $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}
 fi    
+ux_end=`date +%s`
+ux_diff=$(($ux_end-$ux_start))
+echo "WSCLEAN : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
+
 
 fits_xx=wsclean_${ms_b}_briggs-XX-${beam_corr_type}.fits
 fits_yy=wsclean_${ms_b}_briggs-YY-${beam_corr_type}.fits
@@ -182,12 +187,16 @@ fits_xy=wsclean_${ms_b}_briggs-XY-${beam_corr_type}.fits
 fits_xyi=wsclean_${ms_b}_briggs-XYi-${beam_corr_type}.fits
 bname=wsclean_${ms_b}_briggs
 
+ux_start=`date +%s`
 if [[ $wsclean_pbcorr -gt 0 ]]; then
    echo "INFO : primary beam correction already executed by wsclean"
 else
    echo "time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm"
    time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm
 fi   
+ux_end=`date +%s`
+ux_diff=$(($ux_end-$ux_start))
+echo "BEAM_CORR : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
 
 
 # long baselines :

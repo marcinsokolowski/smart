@@ -76,6 +76,11 @@ if [[ -n "$7" && "$7" != "-" ]]; then
    remote_dir=$7
 fi
 
+jobs_per_file=50
+if [[ -n "$8" && "$8" != "-" ]]; then
+   jobs_per_file=$8
+fi
+
 
 force=0
 
@@ -90,6 +95,7 @@ echo "alt               = $alt"
 echo "n_channels        = $n_channels"
 echo "force             = $force"
 echo "remote_dir        = $remote_dir"
+echo "jobs_per_file     = $jobs_per_file"
 echo "#################################################################################"
 
 # just to reflect on the parameters (check if correct)
@@ -150,8 +156,8 @@ do
 done < timestamps.txt
 
 
-echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh 50"
-$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh 50
+echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh $jobs_per_file"
+$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh $jobs_per_file
 
 if [[ -n "$remote_dir" ]]; then
    echo "INFO : copying resulting metafits files and timestamp files to remote directory : $remote_dir"

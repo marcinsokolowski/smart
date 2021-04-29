@@ -110,3 +110,10 @@ do
    echo "time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} > ${outdir}/avg_${pol}.out 2>&1"
    time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} > ${outdir}/avg_${pol}.out 2>&1                     
 done
+
+# calculate RMS 
+cd ${outdir}
+ls *.fits > fits_list
+echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_rms_test.sh"
+sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_rms_test.sh 
+cd -

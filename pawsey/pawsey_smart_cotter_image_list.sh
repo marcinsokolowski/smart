@@ -333,11 +333,15 @@ else
    
          # 2020-07-11 - -norfi removed 
          date
+         ux_start=`date +%s`
          pwd
          which cotter
          echo "time cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${first_timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${first_timestamp}.ms ${obsid}_*gpubox*.fits"
          time cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${first_timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${first_timestamp}.ms ${obsid}_*gpubox*.fits   
          date
+         ux_end=`date +%s`
+         ux_diff=$(($ux_end-$ux_start))
+         echo "COTTER : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff"
 
          if [[ -d ${obsid}_${first_timestamp}.ms ]]; then   
             date   
@@ -418,6 +422,7 @@ else
         # $SMART_DIR/bin/wsclean_auto_optimised_test.sh - terrible images see : /media/msok/0754e982-0adb-4e33-80cc-f81dda1580c8/mwa/smart/j0036/60sec/Garrawarla_test/1278106408/60sec/FINAL/DEEP/20200706213412 
         # 20201201_60sec_images_of_1278106408_FINAL.odt
         date
+        ux_start=`date +%s`
         if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then        
            echo "time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}"
            time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}
@@ -434,6 +439,9 @@ else
 #           fi
         fi
         date
+        ux_end=`date +%s`
+        ux_diff=$(($ux_end-$ux_start))
+        echo "WSCLEAN_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
       else
         echo "WARNING : CASA ms already exists -> skipped"
       fi   

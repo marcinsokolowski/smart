@@ -308,8 +308,13 @@ do
             ls -al 
    
             # 2020-07-11 - -norfi removed 
+            ux_start=`date +%s`
             echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
             $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            ux_end=`date +%s`
+            ux_diff=$(($ux_end-$ux_start))
+            echo "WSCLEAN_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" > benchmarking.txt
+
 
             if [[ -d ${obsid}_${timestamp}.ms ]]; then   
                date   
@@ -387,6 +392,7 @@ do
            fi
 
             # OLD script : wsclean_auto.sh 
+            ux_start=`date +%s`
             if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then
                echo "$SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}"
                $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}
@@ -409,6 +415,9 @@ do
                   fi
 #               fi
             fi
+            ux_end=`date +%s`
+            ux_diff=$(($ux_end-$ux_start))
+            echo "WSCLEAN_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
          else
             echo "WARNING : CASA ms already exists -> skipped"
          fi   
