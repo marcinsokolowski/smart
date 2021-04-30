@@ -11,14 +11,24 @@ if [[ -n "$2" && "$2" != "-" ]]; then
 fi
 out_basename=${timesteps_file%%.txt}
 
-
 n_timesteps=`cat $timesteps_file | wc -l`
+max_timestamps=${n_timesteps}
+if [[ -n "$3" && "$3" != "-" ]]; then
+   max_timestamps=$3
+fi
+
+if [[ $n_timesteps -gt $max_timestamps ]]; then
+   n_timesteps=$max_timestamps
+   echo "WARNING : Number of timestamps to process = $n_timesteps larger than maximum allowed = $max_timestamps -> truncated to n_timesteps := $max_timestamps"
+fi
+
 n_jobs=`echo "$n_images_per_job $n_timesteps" | awk '{printf("%d",$2/$1);}'`
 
 echo "##############################################"
 echo "PARAMETERS:"
 echo "##############################################"
 echo "timesteps_file = $timesteps_file"
+echo "max_timestamps = $max_timestamps"
 echo "n_timesteps   = $n_timesteps"
 echo "n_jobs         = $n_jobs"
 echo "##############################################"
