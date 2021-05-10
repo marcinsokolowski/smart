@@ -31,14 +31,29 @@ if [[ -n "$6" && "$6" != "-" ]]; then
    postfix="$6"
 fi
 
+force=1
+if [[ -n "$7" && "$7" != "-" ]]; then
+   force=$7
+fi
+# WARNING : this should realy be later in the code, but need it here to be used in the ls in the next line:
+
+
 # wsclean_1194350120_20171110115805_briggs-I-image.fits
-if [[ $postfix == "I-image-pb" ]]; then
-   echo "ls ${subdir}/wsclean*_briggs-I-image-pb.fits > fits_stokes_I"
-   ls ${subdir}/wsclean*_briggs-I-image-pb.fits > fits_stokes_I
+echo "DEBUG : fits_stokes_I , force = $force"
+ls -al fits_stokes_I
+# cat fits_stokes_I
+echo "END DEBUG"
+if [[ ! -s fits_stokes_I || $force -gt 0  ]]; then
+   if [[ $postfix == "I-image-pb" ]]; then
+      echo "ls ${subdir}/wsclean*_briggs-I-image-pb.fits > fits_stokes_I"
+      ls ${subdir}/wsclean*_briggs-I-image-pb.fits > fits_stokes_I
+   else
+      echo "ls ${subdir}/wsclean*_briggs${postfix}.fits > fits_stokes_I"
+      ls ${subdir}/wsclean*_briggs${postfix}.fits > fits_stokes_I
+   fi   
 else
-   echo "ls ${subdir}/wsclean*_briggs${postfix}.fits > fits_stokes_I"
-   ls ${subdir}/wsclean*_briggs${postfix}.fits > fits_stokes_I
-fi   
+   echo "WARNING : using existing list file fits_stokes_${stokes} - use force > 0 (7th parameter > 0) to force re-creation"
+fi
 
 n_seconds=`cat fits_stokes_I | wc -l | awk '{printf("%05d",$1);}'`
 
@@ -68,6 +83,20 @@ if [[ -n "$4" && "$4" != "-" ]]; then
    rms_center=$4
 fi
 
+# WARNING : 
+# if [[ -n "$5" && "$5" != "-" ]]; then
+# and
+# if [[ -n "$6" && "$6" != "-" ]]; then
+# are above (at the start of the script)
+
+# force=1
+# if [[ -n "$7" && "$7" != "-" ]]; then
+#   force=$7
+# fi
+# are above (at the start of the script)
+
+
+
 # subdir="??????????????"
 # if [[ -n "$5" && "$5" != "-" ]]; then
 #   subdir="$5"
@@ -77,6 +106,7 @@ echo "################################"
 echo "PARAMETERS:"
 echo "################################"
 echo "subdir = $subdir"
+echo "force  = $force"
 echo "################################"
 
 
@@ -85,12 +115,16 @@ mkdir -p ${outdir}
 for stokes in `echo "I Q U V"`
 do
    #  20160617221541      
-   if [[ $postfix == "I-image-pb" ]]; then
-      echo "ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}"
-      ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}
+   if [[ ! -s fits_stokes_${stokes} || $force -gt 0  ]]; then 
+      if [[ $postfix == "I-image-pb" ]]; then
+         echo "ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}"
+         ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}
+      else
+         echo "ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}"
+         ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}
+      fi
    else
-      echo "ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}"
-      ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}
+      echo "WARNING : using existing list file fits_stokes_${stokes} - use force > 0 (7th parameter > 0) to force re-creation"
    fi
          
 # old with some rediculosuly large window :            
@@ -105,7 +139,12 @@ miriad_add_squared.sh mean_stokes_Q.fits mean_stokes_U.fits ${outdir}/mean_stoke
 
 for pol in `echo "XX YY"`                              
 do
-   ls ${subdir}/wsclean*_briggs-${pol}-image.fits > fits_stokes_${pol}
+   if [[ ! -s fits_stokes_${pol} || $force -gt 0  ]]; then
+      echo "ls ${subdir}/wsclean*_briggs-${pol}-image.fits > fits_stokes_${pol}"
+      ls ${subdir}/wsclean*_briggs-${pol}-image.fits > fits_stokes_${pol}
+   else
+      echo "WARNING : using existing list file fits_stokes_${pol} - use force > 0 (7th parameter > 0) to force re-creation"
+   fi
 
    echo "time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} > ${outdir}/avg_${pol}.out 2>&1"
    time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} > ${outdir}/avg_${pol}.out 2>&1                     
@@ -117,3 +156,7 @@ ls *.fits > fits_list
 echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_rms_test.sh"
 sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_rms_test.sh 
 cd -
+
+# benchmarks :
+echo "cat ${subdir}/bench* > benchmarking.txt"
+cat ${subdir}/bench* > benchmarking.txt

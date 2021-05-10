@@ -50,7 +50,17 @@ if [[ -n "$7" && "$7" != "-" ]]; then
    wsclean_type=$7
 fi
 
+wsclean_options=""
+if [[ -n "$8" && "$8" != "-" ]]; then
+   wsclean_options="$8"
+fi
+is_idg=`echo $wsclean_options | awk '{if(index($0,"idg")>0){print 1;}else{print 0;}}'`
+if [[ $is_idg -gt 0 ]]; then
+   # IDG :
+   wsclean_beam_opt="-pol iquv"
+fi
 
+# PEELING :
 peel_model_file="peel_model.txt"
 
 
@@ -159,8 +169,8 @@ if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper cond
     # echo "GPS time > 1219795217 ( 20180901_000000 ) -> using COMPACT CONFIGURATION SETTINGS"
     echo "max_baseline_int = $max_baseline_int < 2800 -> using COMPACT CONFIGURATION SETTINGS"
     
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}"
-    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
+    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
 else
     # GPS time <= 1219795217 ( 20180901_000000 ) -> using LONG-BASELINES SETTINGS"
     echo "max_baseline_int = $max_baseline_int >= 2800 -> using LONG-BASELINES SETTINGS"
@@ -173,8 +183,8 @@ else
 #    echo "wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 #    wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}"
-    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
+    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
 fi    
 ux_end=`date +%s`
 ux_diff=$(($ux_end-$ux_start))

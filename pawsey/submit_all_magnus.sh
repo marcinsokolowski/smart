@@ -65,12 +65,26 @@ if [[ -n "${11}" && "${11}" != "-" ]]; then
    n_iter=${11}
 fi
 
+wsclean_options=""
+if [[ -n "${12}" && "${12}" != "-" ]]; then
+   wsclean_options=${12}
+fi
+
+queue="workq" # for GPUs use gpuq
+if [[ -n "${13}" && "${13}" != "-" ]]; then
+   queue=${13}
+fi
+
+
+
 echo "#####################################################"
 echo "PARAMETERS :"
 echo "#####################################################"
-echo "wsclean_type   = $wsclean_type"
-echo "wsclean_pbcorr = $wsclean_pbcorr"
-echo "n_iter         = $n_iter"
+echo "wsclean_type    = $wsclean_type"
+echo "wsclean_pbcorr  = $wsclean_pbcorr"
+echo "n_iter          = $n_iter"
+echo "wsclean_options = $wsclean_options"
+echo "queue           = $queue"
 echo "#####################################################"
 
 
@@ -117,8 +131,8 @@ do
    fi
    
    # /astro/mwaops/vcs/ -> /astro/mwavcs/vcs/1275085816/vis/
-   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter}"
-   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter}
+   echo "sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\""
+   sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}"
 
 #   echo "mv ${timestep_file} ${timestep_file}.SUBMITTED"
 #   mv ${timestep_file} ${timestep_file}.SUBMITTED

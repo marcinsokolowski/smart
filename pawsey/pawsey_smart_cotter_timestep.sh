@@ -130,6 +130,10 @@ if [[ -n "${15}" && "${15}" != "-" ]]; then
    n_iter=${15}
 fi
 
+wsclean_options=""
+if [[ -n "${16}" && "${16}" != "-" ]]; then
+   wsclean_options=${16}
+fi
 
 peel_model_file="peel_model.txt"
 
@@ -157,6 +161,7 @@ echo "peel_model_file = $peel_model_file"
 echo "wsclean_type    = $wsclean_type"
 echo "wsclean_pbcorr  = $wsclean_pbcorr"
 echo "n_iter          = $n_iter"
+echo "wsclean_options = $wsclean_options"
 echo "#############################################"
 
 
@@ -249,8 +254,9 @@ do
    echo
    date
 
-   if [[ -d ${timestamp} ]]; then
-      echo "INFO : directory ${timestamp} already exists -> skipped (continue)"
+   wsclean_fits_file=${out_basename}_V.fits
+   if [[ -d ${timestamp} && -s ${timestamp}/${wsclean_fits_file} ]]; then
+      echo "INFO : directory ${timestamp} and file $wsclean_fits_file already exist -> skipped (continue)"
       continue;
    else
       echo "INFO : unprocessed timestamp -> processing now ..."
@@ -291,7 +297,7 @@ do
    casa_ms=${obsid}_${timestamp}.ms
    # wsclean_1255444104_20191018143042_full-XX-dirty.fits
 #   wsclean_fits_file=wsclean_${obsid}_${timestamp}_full-XX-dirty.fits
-   wsclean_fits_file=${bname}-XX-dirty.fits
+#   wsclean_fits_file=${bname}-XX-dirty.fits
    
    if [[ ( -s ${out_basename}_V.fits || -s ${out_basename_dirty}_V.fits) && $force -le 0 ]]; then
       echo "Timestamp $timestamp / $ms_b / $out_basename already processed -> skipped"
@@ -394,8 +400,8 @@ do
             # OLD script : wsclean_auto.sh 
             ux_start=`date +%s`
             if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then
-               echo "$SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}"
-               $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}
+               echo "$SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} ${wsclean_options}" 
+               $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} ${wsclean_options}
             else
 #               if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
 #                  echo "$SMART_DIR/bin/wsclean_auto_optimised_test.sh ${obsid}_${timestamp}.ms - 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
