@@ -1,5 +1,7 @@
 #!/bin/bash -l
 
+# sbatch -p workq -M $sbatch_cluster pawsey_smarter_cotter_timestep.sh 1 1  /astro/mwavcs/vcs/1276619416/cal/1276619416/vis 1276619416 1276625432 "18h33m41.89s -03d39m04.25s" - 4096 test.txt 1
+
 # Same as ../smart_cotter_image_all.sh , just the SBATCH lines below are added 
 # so after update in smart_cotter_image_all.sh please update also this one by :
 #    mv pawsey_smart_cotter_timestep.sh pawsey_smart_cotter_timestep.sh.OLD
@@ -10,18 +12,22 @@
 # INFO :
 #   --tasks-per-node=8 means that so many instances of the program will be running on a single node - NOT THREADS for THREADS use : --cpus-per-node=8
 
-#SBATCH --account=pawsey0348
-#SBATCH --account=mwavcs
-#SBATCH --time=23:59:00
+#SBATCH --account=director2183
+#SBATCH --time=23:59:59
+#SBATCH --gres=gpu:1
 #SBATCH --nodes=1
+#SBATCH --cpus-per-task=8
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-gpu=1
 #SBATCH --mem=120gb
-#SBATCH --output=./smart.o%j
-#SBATCH --error=./smart.e%j
+#SBATCH --output=./smarter.o%j
+#SBATCH --error=./smarter.e%j
 #SBATCH --export=NONE
-echo "source $HOME/smart/bin/$COMP/env"
-source $HOME/smart/bin/$COMP/env
+
+echo "source /group/director2183/software/env.sh"
+source /group/director2183/software/env.sh
+
+echo "module load cotter-wsclean-msok/devel"
+module load cotter-wsclean-msok/devel
 
 which cotter
 echo "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
@@ -143,10 +149,11 @@ if [[ -n "${16}" && "${16}" != "-" ]]; then
    wsclean_options=${16}
 fi
 
-pixscale_param=""
+tmpdir="/tmp/cotter_wsclean/"
 if [[ -n "${17}" && "${17}" != "-" ]]; then
-   pixscale_param=${17}
+   tmpdir=${17}
 fi
+
 
 
 peel_model_file="peel_model.txt"
@@ -179,14 +186,9 @@ echo "wsclean_pbcorr  = $wsclean_pbcorr"
 echo "n_iter          = $n_iter"
 echo "wsclean_options = $wsclean_options"
 echo "is_idg          = $is_idg"
-echo "pixscale_param  = $pixscale_param"
+echo "tmpdir          = $tmpdir"
 echo "#############################################"
 
-
-change_phase_center=1
-
-cp $SMART_DIR/bin/image_tile_auto.py .
-cp $SMART_DIR/bin/apply_custom_cal.py .
 
 original_dir=`pwd`
 
@@ -266,6 +268,8 @@ if [[ ! -s ${calid}.cal ]]; then
    fi
 fi
 
+echo "cp ${COTTER_WSCLEAN_CONFIG} ."
+cp ${COTTER_WSCLEAN_CONFIG} .
 
 for timestamp in `cat ${timestamp_file}`
 do
@@ -323,6 +327,23 @@ do
       if [[ ! -s ${wsclean_fits_file}  ]]; then
          echo "File ${wsclean_fits_file} does not exist -> processing"
          if [[ ! -d ${obsid}_${timestamp}.ms ]]; then
+            # original_dir
+            mkdir -p ${tmpdir}/
+            cd ${tmpdir}/
+            
+            echo "rm -fr ${tmpdir}/*"
+            rm -fr ${tmpdir}/*
+            
+            pwd
+            echo "cp ${original_dir}/*.bin ."
+            cp ${original_dir}/*.bin .
+            
+            echo "ln -s ${original_dir}/${timestamp}.metafits ."
+            ln -s ${original_dir}/${timestamp}.metafits .
+            
+            echo "ln -s ${original_dir}/cotter_wsclean.config"
+            ln -s ${original_dir}/cotter_wsclean.config 
+         
             if [[ $do_scp -gt 0 ]]; then 
                echo "rsync -avP ${galaxy_path}/${obsid}_${timestamp}*.fits ."
                rsync -avP ${galaxy_path}/${obsid}_${timestamp}*.fits .
@@ -333,115 +354,105 @@ do
    
             # 2020-07-11 - -norfi removed 
             ux_start=`date +%s`
-            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+#            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+#            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "srun cotter_wsclean -d "./" -o ${obsid} -c ${calid} -t ${timestamp} ${options} -C cotter_wsclean.config"
+            srun cotter_wsclean -d "./" -o ${obsid} -c ${calid} -t ${timestamp} ${options} -C cotter_wsclean.config
             ux_end=`date +%s`
             ux_diff=$(($ux_end-$ux_start))
-            echo "COTTER_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" > benchmarking.txt
-
-
-            if [[ -d ${obsid}_${timestamp}.ms ]]; then   
-               date   
-               echo "flagdata('${obsid}_${timestamp}.ms',mode='unflag')" > unflag.py
-#               echo "casapy -c unflag.py"
-#               casapy -c unflag.py 
-
-              if [[ -s ../flagged_tiles.txt ]]; then
-                 echo "rm -f flag_files.py"
-                 rm -f flag_files.py
-                 
-#                 echo "flagdata(vis='${obsid}_${timestamp}.ms',mode='clip',clipminmax=[0.001,2500])" > flag_files.py
-                 echo > flag_files.py
-                 
-                 for tile in `cat ../flagged_tiles.txt`
-                 do
-                    echo "flagdata(vis='${obsid}_${timestamp}.ms',antenna='${tile}')" >> flag_files.py                    
-                 done
-                 
-                 echo "casapy --nologger -c flag_files.py"
-                 casapy --nologger -c flag_files.py
-              fi 
-      
-              date   
-              if [[ -s ${cal} && ${use_casa_cal} -gt 0 ]]; then
-                  echo "casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}"
-                  casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}
-              else
-#                  which applysolutions
-#                  echo "applysolutions ${obsid}_${timestamp}.ms ${bin_file}"
-#                  applysolutions ${obsid}_${timestamp}.ms ${bin_file}
-                   echo "WARNING : apply solutions is now performed in cotter - using option -full-apply ${bin_file}"
-              fi
-      
-              if [[ $do_remove -gt 0 || $do_remove_gpufits -gt 0 ]]; then
-                  echo "rm -fr ${obsid}_${timestamp}*.fits"
-                  rm -fr ${obsid}_${timestamp}*.fits
-              else
-                  echo "WARNING : remove is not required (may produce a lot of data) !"
-              fi
-           else
-              echo "ERROR : CASA measurements set ${obsid}_${timestamp}.ms not created -> Exiting the script !"
-              exit;
-           fi           
-
-            if [[ $change_phase_center -gt 0 ]]; then
-               date
-#            echo "/home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h36m10.34s -10d33m25.93s"
-#            /home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h36m10.34s -10d33m25.93s     
+            echo "COTTER_WSCLEAN_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" > benchmarking.txt
+ 
+            echo "PROGRESS : cleaning started at :"
+            date           
+            # remove GPU FITS files :
+            echo "rm -fr ${obsid}_${timestamp}*.fits"
+            rm -fr ${obsid}_${timestamp}*.fits
             
-#             echo "/home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h34m08.9s -07d21m53.409s"
-#             /home/msok/mwa_software/anoko/anoko/chgcentre/build/chgcentre ${casa_ms} 00h34m08.9s -07d21m53.409s
-
-              # see above : for mwa-process02 /home/msok/mwa_software/anoko/anoko/chgcentre/build/ is added to PATH
-                  echo "INFO : phase center is now performed in cotter"   
-#                 echo "chgcentre ${casa_ms} ${object}"
-#                 chgcentre ${casa_ms} ${object}
-               date
-            fi
-         
+            mkdir -p ${original_dir}/${timestamp}/
+            echo "mv ${tmpdir}/*image.fits ${original_dir}/${timestamp}/"
+            mv ${tmpdir}/*image.fits ${original_dir}/${timestamp}/
+            
+            echo "rm -fr ${tmpdir}/*"
+            rm -fr ${tmpdir}/*
+            echo "PROGRESS : cleaning finished at :"
             date
-#    echo "casapy -c image_tile_auto.py --imagesize=2048 ${obsid}_${timestamp}.ms"
-#    casapy -c image_tile_auto.py --imagesize=2048 ${obsid}_${timestamp}.ms   
 
-           if [[ -s ../${peel_model_file} ]]; then
-              echo "INFO : using ../${peel_model_file} to peel sources"
-           
-              echo "cp ../${peel_model_file} ."
-              cp ../${peel_model_file} .
-           
-              mkdir mwapy/
-              ln -sf ../../data mwapy/
-           else
-              echo "WARNING : file ../${peel_model_file} does not exist -> no peeling required"
-           fi
+# TODO :
+# cotter_wsclean.config
+# phase center
+# tile flagging (flag in metafits)
+# removing CASA ms
+# using /tmp or RAMDISK on garrawarla / Topaz 
 
-            # OLD script : wsclean_auto.sh 
-            ux_start=`date +%s`
-            if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then
-               echo "$SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} \"${wsclean_options}\" ${pixscale_param}" 
-               $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} "${wsclean_options}" ${pixscale_param}
-            else
-#               if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
-#                  echo "$SMART_DIR/bin/wsclean_auto_optimised_test.sh ${obsid}_${timestamp}.ms - 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
-#                  $SMART_DIR/bin/wsclean_auto_optimised_test.sh ${obsid}_${timestamp}.ms - 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
-#               else
-                  if [[ "$wsclean_type" == "jay" || "$wsclean_type" == "jay8096" ]]; then
-                     if [[ "$wsclean_type" == "jay" ]]; then
-                        echo "time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
-                        time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
-                     fi
-#                     if [[ "$wsclean_type" == "jay8096" ]]; then
-#                        echo "time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096"
-#                        time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096
+
+#            if [[ -d ${obsid}_${timestamp}.ms ]]; then   
+#               date   
+#               echo "flagdata('${obsid}_${timestamp}.ms',mode='unflag')" > unflag.py
+#
+#              if [[ -s ../flagged_tiles.txt ]]; then
+#                 echo "rm -f flag_files.py"
+#                 rm -f flag_files.py
+#                 
+#                 echo > flag_files.py
+#                 
+#                 for tile in `cat ../flagged_tiles.txt`
+#                 do
+#                    echo "flagdata(vis='${obsid}_${timestamp}.ms',antenna='${tile}')" >> flag_files.py                    
+#                 done
+#                 
+#                 echo "casapy --nologger -c flag_files.py"
+#                 casapy --nologger -c flag_files.py
+#              fi 
+#      
+#              date   
+#              if [[ -s ${cal} && ${use_casa_cal} -gt 0 ]]; then
+#                  echo "casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}"
+#                  casapy --nologger -c $SMART_DIR/bin/apply_custom_cal.py ${obsid}_${timestamp}.ms ${cal}
+#              else
+#                   echo "WARNING : apply solutions is now performed in cotter - using option -full-apply ${bin_file}"
+#              fi
+#      
+#              if [[ $do_remove -gt 0 || $do_remove_gpufits -gt 0 ]]; then
+#                  echo "rm -fr ${obsid}_${timestamp}*.fits"
+#                  rm -fr ${obsid}_${timestamp}*.fits
+#              else
+#                  echo "WARNING : remove is not required (may produce a lot of data) !"
+#              fi
+#           else
+#              echo "ERROR : CASA measurements set ${obsid}_${timestamp}.ms not created -> Exiting the script !"
+#              exit;
+#           fi           
+
+#           if [[ -s ../${peel_model_file} ]]; then
+#              echo "INFO : using ../${peel_model_file} to peel sources"
+#           
+#              echo "cp ../${peel_model_file} ."
+#              cp ../${peel_model_file} .
+#           
+#              mkdir mwapy/
+#              ln -sf ../../data mwapy/
+#           else
+#              echo "WARNING : file ../${peel_model_file} does not exist -> no peeling required"
+#           fi
+
+#            # OLD script : wsclean_auto.sh 
+#            ux_start=`date +%s`
+#            if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then
+#               echo "$SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} ${wsclean_options}" 
+#               $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} ${wsclean_options}
+#            else
+#                  if [[ "$wsclean_type" == "jay" || "$wsclean_type" == "jay8096" ]]; then
+#                     if [[ "$wsclean_type" == "jay" ]]; then
+#                        echo "time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
+#                        time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
 #                     fi
-                  else 
-                     echo "ERROR : wsclean_type = $wsclean_type unknown"
-                  fi
-#               fi
-            fi
-            ux_end=`date +%s`
-            ux_diff=$(($ux_end-$ux_start))
-            echo "WSCLEAN_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
+#                  else 
+#                     echo "ERROR : wsclean_type = $wsclean_type unknown"
+#                  fi
+#            fi
+#            ux_end=`date +%s`
+#            ux_diff=$(($ux_end-$ux_start))
+#            echo "WSCLEAN_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
          else
             echo "WARNING : CASA ms already exists -> skipped"
          fi   

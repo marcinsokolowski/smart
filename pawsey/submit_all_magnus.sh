@@ -75,6 +75,10 @@ if [[ -n "${13}" && "${13}" != "-" ]]; then
    queue=${13}
 fi
 
+pixscale_param=""
+if [[ -n "${14}" && "${14}" != "-" ]]; then
+   pixscale_param=${14}
+fi
 
 
 echo "#####################################################"
@@ -85,6 +89,7 @@ echo "wsclean_pbcorr  = $wsclean_pbcorr"
 echo "n_iter          = $n_iter"
 echo "wsclean_options = $wsclean_options"
 echo "queue           = $queue"
+echo "pixscale_param  = $pixscale_param"
 echo "#####################################################"
 
 
@@ -131,8 +136,8 @@ do
    fi
    
    # /astro/mwaops/vcs/ -> /astro/mwavcs/vcs/1275085816/vis/
-   echo "sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\""
-   sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}"
+   echo "sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\" ${pixscale_param}"
+   sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}
 
 #   echo "mv ${timestep_file} ${timestep_file}.SUBMITTED"
 #   mv ${timestep_file} ${timestep_file}.SUBMITTED

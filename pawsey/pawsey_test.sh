@@ -1,14 +1,20 @@
-#!/bin/bash
+#!/bin/bash -l
 
-source $HOME/smart/bin/magnus/env
+#SBATCH --account=mwavcs
+#SBATCH --time=23:59:00
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-gpu=1
+#SBATCH --mem=120gb
+#SBATCH --output=./test.o%j
+#SBATCH --error=./test.e%j
+#SBATCH --export=NONE
+echo "source $HOME/smart/bin/$COMP/env"
+source $HOME/smart/bin/$COMP/env
 
-if [[ ! -s test.txt ]]; then
-   head -1 timestamps.txt > test.txt
-fi
+export LD_LIBRARY_PATH=`pwd`:/pawsey/mwa_sles12sp4/devel/binary/cuda/10.2/lib64/stubs/:$LD_LIBRARY_PATH
 
-# Test : RAJ             23:30:26.885                  7.000e-03 ,  DECJ            -20:05:29.63                  1.700e-01a
-# candidate : "00h36m08.95s -10d34m00.3s"
-# sbatch -p workq -M magnus ~/smart/bin/pawsey/pawsey_smart_cotter_timestep.sh 1 0 /astro/mwaops/vcs/1194350120/vis 1194350120 1194345816 "23h30m26.9s -20d05m29.63s" - - test.txt 1
-sbatch -p workq -M magnus ~/smart/bin/pawsey/pawsey_smart_cotter_timestep.sh 1 0 /astro/mwavcs/vcs/1194350120/vis 1194350120 1194345816 "00h36m08.95s -10d34m00.3s" - - test.txt 1
-# lsq
-# sbatch -p workq -M magnus ~/smart/bin/pawsey/pawsey_smart_cotter_timestep.sh
+srun /pawsey/mwa_sles12sp4/apps/cascadelake/gcc/8.3.0/wsclean/2.9/bin/wsclean -name wsclean_1302850528_20210419070602_briggs -j 6 -size 8192 8192  -pol iquv -abs-mem 120 -weight briggs -1 -scale 0.0335 -nmiter 1 -niter 10000 -threshold 0.050 -mgain 0.85 -minuv-l 30 -join-polarizations -use-idg 1302850528_20210419070602.ms
+
+
+

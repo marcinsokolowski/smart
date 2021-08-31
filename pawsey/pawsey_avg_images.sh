@@ -31,11 +31,22 @@ if [[ -n "$6" && "$6" != "-" ]]; then
    postfix="$6"
 fi
 
-force=1
+force=0
 if [[ -n "$7" && "$7" != "-" ]]; then
    force=$7
 fi
 # WARNING : this should realy be later in the code, but need it here to be used in the ls in the next line:
+
+start_second=0
+if [[ -n "$8" && "$8" != "-" ]]; then
+   start_second=$8
+fi
+
+end_second=10000000
+if [[ -n "$9" && "$9" != "-" ]]; then
+   end_second=$9
+fi
+
 
 
 # wsclean_1194350120_20171110115805_briggs-I-image.fits
@@ -44,6 +55,7 @@ ls -al fits_stokes_I
 # cat fits_stokes_I
 echo "END DEBUG"
 if [[ ! -s fits_stokes_I || $force -gt 0  ]]; then
+   # awk -v start_second=${start_second} -v end_second=${end_second} '{if(NF>=start_second && NF<=end_second){print $0;}}'
    if [[ $postfix == "I-image-pb" ]]; then
       echo "ls ${subdir}/wsclean*_briggs-I-image-pb.fits > fits_stokes_I"
       ls ${subdir}/wsclean*_briggs-I-image-pb.fits > fits_stokes_I
@@ -71,6 +83,9 @@ fi
 
 if [[ ! -n "${outdir}" ]]; then
    outdir=${n_seconds}_seconds_maxrms${max_rms}
+   if [[ $start_second -ge 0 && $end_second -ge 0 ]]; then
+      outdir=Range_${start_second}-${end_second}-seconds_maxrms${max_rms}
+   fi
 fi
 
 rms_radius=10
@@ -115,39 +130,47 @@ mkdir -p ${outdir}
 for stokes in `echo "I Q U V"`
 do
    #  20160617221541      
-   if [[ ! -s fits_stokes_${stokes} || $force -gt 0  ]]; then 
-      if [[ $postfix == "I-image-pb" ]]; then
-         echo "ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}"
-         ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}
+   if [[ ! -s ${outdir}/mean_stokes_${stokes}.fits || $force -gt 0  ]]; then
+      if [[ ! -s fits_stokes_${stokes} || $force -gt 0  ]]; then 
+         if [[ $postfix == "I-image-pb" ]]; then
+            echo "ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}"
+            ls ${subdir}/wsclean*_briggs-${stokes}-image-pb.fits > fits_stokes_${stokes}
+         else
+            echo "ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}"
+            ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}
+         fi
       else
-         echo "ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}"
-         ls ${subdir}/wsclean*_briggs-image_${stokes}.fits > fits_stokes_${stokes}
+         echo "WARNING : using existing list file fits_stokes_${stokes} - use force > 0 (7th parameter > 0) to force re-creation"
       fi
-   else
-      echo "WARNING : using existing list file fits_stokes_${stokes} - use force > 0 (7th parameter > 0) to force re-creation"
-   fi
          
 # old with some rediculosuly large window :            
 #   echo "time $SMART_DIR/bin/avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w \"(1200,700)-(1900,900)\""
 #   time $SMART_DIR/bin/avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w "(1200,700)-(1900,900)"
-
-   echo "time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} > ${outdir}/avg_${stokes}.out 2>&1"
-   time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} > ${outdir}/avg_${stokes}.out 2>&1                     
+  
+      echo "time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${stokes}.out 2>&1"
+      time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${stokes}.out 2>&1                     
+   else
+      echo "WARNING : file ${outdir}/mean_stokes_${stokes}.fits exists - use option force > 0 to re-process (7th parameter)"
+   fi
 done
                               
 miriad_add_squared.sh mean_stokes_Q.fits mean_stokes_U.fits ${outdir}/mean_stokes_L.fits                             
 
 for pol in `echo "XX YY"`                              
 do
-   if [[ ! -s fits_stokes_${pol} || $force -gt 0  ]]; then
-      echo "ls ${subdir}/wsclean*_briggs-${pol}-image.fits > fits_stokes_${pol}"
-      ls ${subdir}/wsclean*_briggs-${pol}-image.fits > fits_stokes_${pol}
-   else
-      echo "WARNING : using existing list file fits_stokes_${pol} - use force > 0 (7th parameter > 0) to force re-creation"
-   fi
+   if [[ ! -s ${outdir}/mean_stokes_${pol}.fits || $force -gt 0  ]]; then
+      if [[ ! -s fits_stokes_${pol} || $force -gt 0  ]]; then
+         echo "ls ${subdir}/wsclean*_briggs-${pol}-image.fits > fits_stokes_${pol}"
+         ls ${subdir}/wsclean*_briggs-${pol}-image.fits > fits_stokes_${pol}
+      else
+         echo "WARNING : using existing list file fits_stokes_${pol} - use force > 0 (7th parameter > 0) to force re-creation"
+      fi
 
-   echo "time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} > ${outdir}/avg_${pol}.out 2>&1"
-   time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} > ${outdir}/avg_${pol}.out 2>&1                     
+      echo "time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${pol}.out 2>&1"
+      time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${pol}.out 2>&1                     
+   else
+      echo "WARNING : file ${outdir}/mean_stokes_${pol}.fits exists - use option force > 0 to re-process (7th parameter)"
+   fi
 done
 
 # calculate RMS 
