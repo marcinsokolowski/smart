@@ -58,7 +58,20 @@ is_idg=`echo $wsclean_options | awk '{if(index($0,"idg")>0){print 1;}else{print 
 if [[ $is_idg -gt 0 ]]; then
    # IDG :
    wsclean_beam_opt="-pol iquv"
+   wsclean_pbcorr=0 # no need for beam correction when IDG is used (it performs beam correction and produces Stokes images itself)
 fi
+
+pixscale_param=""
+if [[ -n "$9" && "$9" != "-" ]]; then
+   pixscale_param=$9
+fi
+
+echo "#########################################"
+echo "PARAMETERS of wsclean_auto_optimised.sh :"
+echo "#########################################"
+echo "pixscale_param = $pixscale_param"
+echo "#########################################"
+
 
 # PEELING :
 peel_model_file="peel_model.txt"
@@ -80,6 +93,7 @@ if [[ $cluster == "mwa" || $cluster == "garrawarla" ]]; then # mwa = garrawarla
 fi
 
 NCPUS=4
+srun_command=srun 
 
 metafits=${metafits_base}.metafits
 metainfo=${metafits%%metafits}metadata_info
@@ -120,6 +134,11 @@ if [[ -s $metainfo ]]; then
 else
    echo "ERROR : file $metainfo not created -> cannot continue"
    exit -2;
+fi
+
+if [[ -n $pixscale_param && $pixscale_param != "-" ]]; then
+   echo "INFO : overwritting pixscale = $pixscale with external value = $pixscale_param"
+   pixscale=$pixscale_param
 fi
 
 echo "------------------------------------------------------------"
