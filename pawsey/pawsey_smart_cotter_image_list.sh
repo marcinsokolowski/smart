@@ -17,6 +17,7 @@
 #SBATCH --error=./smartimagelist.e%j
 #SBATCH --export=NONE
 
+
 source $HOME/smart/bin/$COMP/env
 
 
@@ -134,6 +135,11 @@ if [[ -n "${15}" && "${15}" != "-" ]]; then
    n_iter=${15}
 fi
 
+wsclean_options=""
+if [[ -n "${16}" && "${16}" != "-" ]]; then
+   wsclean_options=${16}
+fi
+
 
 peel_model_file="peel_model.txt"
 keep_casa_ms=1
@@ -162,6 +168,7 @@ echo "outdir      = $outdir"
 echo "peel_model_file = $peel_model_file"
 echo "wsclean_type = $wsclean_type"
 echo "keep_casa_ms = $keep_casa_ms"
+echo "wsclean_options = $wsclean_options"
 echo "#############################################"
 
 pwd
@@ -423,21 +430,21 @@ else
         # 20201201_60sec_images_of_1278106408_FINAL.odt
         date
         ux_start=`date +%s`
-        if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then        
-           echo "time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}"
-           time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type}
-        else 
-           if [[ "$wsclean_type" == "jay" ]]; then
-              echo "time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
-              time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
-           else
-              echo "WARNING : unknown WSCLEAN type $wsclean_type"
-           fi
+#        if [[ "$wsclean_type" == "standard" || "$wsclean_type" == "deep_clean" ]]; then        
+        echo "time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} \"${wsclean_options}\""
+        time $SMART_DIR/bin/wsclean_auto_optimised.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr} ${wsclean_type} "${wsclean_options}"
+#        else 
+#           if [[ "$wsclean_type" == "jay" ]]; then
+#              echo "time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}"
+#              time $SMART_DIR/bin/wsclean_auto_jay.sh ${obsid}_${first_timestamp}.ms $n_iter 0 ${beam_corr_type} ${imagesize} ${wsclean_pbcorr}
+#           else
+#              echo "WARNING : unknown WSCLEAN type $wsclean_type"
+#           fi
 #           if [[ "$wsclean_type" == "jay8096" ]]; then
 #              echo "time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096"
 #              time $SMART_DIR/bin/wsclean_auto_jay8096.sh ${obsid}_${first_timestamp}.ms - 0 ${beam_corr_type} 8096
 #           fi
-        fi
+#        fi
         date
         ux_end=`date +%s`
         ux_diff=$(($ux_end-$ux_start))

@@ -59,6 +59,23 @@ if [[ -n "${10}" && "${10}" != "-" ]]; then
    n_iter=${10}
 fi
 
+nothing=""
+if [[ -n "${11}" && "${11}" != "-" ]]; then
+   wsclean_options=${11}
+fi
+
+wsclean_options=""
+if [[ -n "${12}" && "${12}" != "-" ]]; then
+   wsclean_options=${12}
+fi
+
+
+echo "#############################################"
+echo "PARAMETERS of submit_long_image.sh :"
+echo "#############################################"
+echo "wsclean_options = $wsclean_options"
+echo "#############################################"
+
 
 if [[ -d data || -L data ]]; then
    echo "INFO : data subdirectory / link already exists -> nothing to be done"
@@ -88,8 +105,8 @@ do
       is_last=1
    fi
 
-   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_image_list.sh - - ${galaxy_path} ${obsid} ${calid} "${object}" - $imagesize $timestamp_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter}"
-   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_image_list.sh - - ${galaxy_path} ${obsid} ${calid} "${object}" - $imagesize $timestamp_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter}
+   echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_image_list.sh - - ${galaxy_path} ${obsid} ${calid} \"${object}\" - $imagesize $timestamp_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\""
+   sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_image_list.sh - - ${galaxy_path} ${obsid} ${calid} "${object}" - $imagesize $timestamp_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}"
       
    sleep 5
 done

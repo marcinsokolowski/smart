@@ -163,6 +163,13 @@ fi
 clean="-scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85"
 if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
    clean="-mfs-weighting -scale $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8"
+else
+   if [[ "$wsclean_type" == "jay" || "$wsclean_type" == "jai" ]]; then 
+      # pixscale="-scale 16asec" vs. I have 20 arcsec
+      echo "WSCLEAN type = Jai -> special clean settings"
+      n_iter=100000
+      clean="-multiscale -mgain 0.8 -niter $n_iter -auto-mask 3 -auto-threshold 1.2 -local-rms -circular-beam"
+   fi
 fi
 
 echo "###########################################################"
