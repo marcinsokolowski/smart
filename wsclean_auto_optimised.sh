@@ -66,10 +66,14 @@ if [[ -n "$9" && "$9" != "-" ]]; then
    pixscale_param=$9
 fi
 
+# constants (can be converted to parameters later):
+memory_gb=128
+
 echo "#########################################"
 echo "PARAMETERS of wsclean_auto_optimised.sh :"
 echo "#########################################"
 echo "pixscale_param = $pixscale_param"
+echo "memory_gb      = $memory_gb"
 echo "#########################################"
 
 
@@ -160,6 +164,7 @@ else
    echo "WARNING : file ${peel_model_file} does not exist -> no peeling required"
 fi
 
+briggs=-1
 clean="-scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85"
 if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
    clean="-mfs-weighting -scale $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8"
@@ -168,7 +173,8 @@ else
       # pixscale="-scale 16asec" vs. I have 20 arcsec
       echo "WSCLEAN type = Jai -> special clean settings"
       n_iter=100000
-      clean="-multiscale -mgain 0.8 -niter $n_iter -auto-mask 3 -auto-threshold 1.2 -local-rms -circular-beam"
+      clean="-scale $pixscale -multiscale -mgain 0.8 -niter $n_iter -auto-mask 3 -auto-threshold 1.2 -local-rms -circular-beam"
+      briggs=0
    fi
 fi
 
@@ -178,6 +184,7 @@ echo "###########################################################"
 echo "wsclean_type   = $wsclean_type"
 echo "wsclean_pbcorr = $wsclean_pbcorr ( wsclean_beam_opt = $wsclean_beam_opt )"
 echo "clean          = $clean"
+echo "briggs         = $briggs"
 echo "###########################################################"
 
 
@@ -195,8 +202,8 @@ if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper cond
     # echo "GPS time > 1219795217 ( 20180901_000000 ) -> using COMPACT CONFIGURATION SETTINGS"
     echo "max_baseline_int = $max_baseline_int < 2800 -> using COMPACT CONFIGURATION SETTINGS"
     
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
-    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
+    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
 else
     # GPS time <= 1219795217 ( 20180901_000000 ) -> using LONG-BASELINES SETTINGS"
     echo "max_baseline_int = $max_baseline_int >= 2800 -> using LONG-BASELINES SETTINGS"
@@ -209,8 +216,8 @@ else
 #    echo "wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 #    wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
-    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem 120 -weight briggs -1 $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
+    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
+    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
 fi    
 ux_end=`date +%s`
 ux_diff=$(($ux_end-$ux_start))
