@@ -81,7 +81,7 @@ def read_flagged_antennas( filename ) :
 def fix_metafits( fitsname , dateobs, gps, ra, dec, n_chans=768, n_scans=1, inttime=4 , flag_file=None ) :
    fits = pyfits.open(fitsname)
       
-   fix_metafits_base( fits , fitsname, dateobs, gps, ra, dec, n_chans=n_chans, n_scans=n_scans, inttime=inttime ) 
+   fix_metafits_base( fits , fitsname, dateobs, gps, ra, dec, n_chans=n_chans, n_scans=n_scans, inttime=inttime, flag_file=flag_file ) 
    
 
 def fix_metafits_base( fits , fitsname, dateobs, gps, ra, dec, n_chans=768, n_scans=1, inttime=1, flag_file=None ) :
@@ -99,7 +99,9 @@ def fix_metafits_base( fits , fitsname, dateobs, gps, ra, dec, n_chans=768, n_sc
      print("Flag file %s specified -> reading" % (flag_file))
      flagged_antenna_list = read_flagged_antennas( flag_file )
      print("Read %d flagged antennas from file %s" % (len(flagged_antenna_list),flag_file))
-   
+     
+     table = fits[1].data
+     
      # see function list_tile_name in metadata_auto.py :
      for i in range(0,256):
         idx=table[i][0]
