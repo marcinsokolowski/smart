@@ -89,10 +89,13 @@ fi
 cal=${calid}.cal
 
 # object="00h34m21.83s -05d34m36.72s" # PSRJ            J0034-0534 , S150            265.
-object="00h36m08.95s -10d34m00.3s" # candidate 
+# object="00h36m08.95s -10d34m00.3s" # candidate 
+object=""
+phase_centre=""
 # object="00h34m08.9s -07d21m53.409s" # J0034 for a test
 if [[ -n "$6" && "$6" != "-" ]]; then
    object=$6
+   phase_centre="-centre ${object}"
 fi
 
 beam_corr_type="image"
@@ -333,8 +336,8 @@ do
    
             # 2020-07-11 - -norfi removed 
             ux_start=`date +%s`
-            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} -centre ${object} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
             ux_end=`date +%s`
             ux_diff=$(($ux_end-$ux_start))
             echo "COTTER_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" > benchmarking.txt

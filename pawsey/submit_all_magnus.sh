@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "DEBUG : |$1|$2|$3|$4|$5|$6|"
+
 obsid=1194350120
 if [[ -n "$1" && "$1" != "-" ]]; then
    obsid=$1
@@ -16,13 +18,11 @@ else
    exit;
 fi
 
-object="00h36m08.95s -10d34m00.3s"
+object="-"
+# object="00h36m08.95s -10d34m00.3s"
 # test : J2330 object="23h30m26.9s -20d05m29.63s"
 if [[ -n "$3" && "$3" != "-" ]]; then
    object="$3"
-else
-   echo "ERROR : OBJECT must be provided in 3rd parameter !!!"
-   exit;
 fi
 
 sleep_time=2
