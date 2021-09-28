@@ -86,6 +86,11 @@ if [[ -n "$9" && "$9" != "-" ]]; then
    max_timestamps=$9
 fi
 
+calid=-1
+if [[ -n "${10}" && "${10}" != "-" ]]; then
+   calid=${10}
+fi
+
 
 force=0
 
@@ -93,6 +98,7 @@ echo "##########################################################################
 echo "PARAMETERS:"
 echo "#################################################################################"
 echo "obsid = $obsid ( $metafits )"
+echo "calid = $calid ( if < 0 -> no flagging applied in metafits files)"
 echo "gpufits_files_dir = $gpufits_files_dir"
 echo "processing_dir    = $processing_dir"
 echo "azim              = $azim"
@@ -105,8 +111,8 @@ echo "max_timestamps    = $max_timestamps"
 echo "#################################################################################"
 
 # just to reflect on the parameters (check if correct)
-echo "Please verify if these parameters are correct ..."
-sleep 5
+# echo "Please verify if these parameters are correct ..."
+# sleep 5
 
 
 
@@ -114,6 +120,21 @@ sleep 5
 # if [[ -n "$6" && "$6" != "-" ]]; then
 #   gpu_list=$6
 # fi
+
+flag_options=""
+if [[ $calid -gt 0 ]]; then
+   echo "getasvocal.sh ${calid} ${n_channels}"
+   getasvocal.sh ${calid} ${n_channels}     
+   
+   if [[ -s flagged_tiles.txt ]]; then
+      flag_options="--flag_file=flagged_tiles.txt"
+      echo "Flag file flagged_tiles.txt exists -> adding options $flag_options"      
+   else
+      echo "WARNING : file flagged_tiles.txt not found"
+   fi
+else
+   echo "WARNING : calibration CALID not specified -> cannot flag tiles in metafits files"
+fi
 
 
 # cd $gpufits_files_dir
@@ -154,8 +175,8 @@ do
       dec=`azh2radec $t_ux mwa $azim $alt | awk '{print $6;}'`
    
       cp $metafits ${t}.metafits
-      echo "python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec --n_channels=${n_channels}"
-      python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec  --n_channels=${n_channels}
+      echo "python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec --n_channels=${n_channels} ${flag_options}"
+      python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec  --n_channels=${n_channels} ${flag_options}
    else
       echo "INFO : ${t}.metafits already exists -> ignored"
    fi   
