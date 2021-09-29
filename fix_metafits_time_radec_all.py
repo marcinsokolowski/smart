@@ -40,11 +40,6 @@ def mkdir_p(path):
          pass
       else: raise
 
-# parser.add_option('-c','--n_channels','--n_chans',dest="n_channels",default=768, help="Number of channels [default %default]", type="int")
-# parser.add_option('-t','--n_scans','--n_timesteps',dest="n_timesteps",default=1, help="Number of timesteps [default %default]", type="int")
-# parser.add_option('-i','--inttime','--inttime_sec',dest="inttime",default=4, help="Integration time in seconds [default %default]", type="int")
-
-
 def read_text_file( filename ) :
    timestamps=[]
 
@@ -72,55 +67,47 @@ def read_text_file( filename ) :
 
    return (timestamps)
 
-                                            
-def parse_options(idx):
-   parser=optparse.OptionParser()
-   parser.set_usage("""fix_metafits_time_radec_all.py""")
-   parser.add_option("--n_channels","--n_chan","--n_ch","-n",dest="n_channels",default=768,help="Number of channels [default: %default]",type="int")
-   parser.add_option("--obsid","--OBSID","--obs","-o",dest="obsid",default=-1,help="OBSID [default: %default]",type="int")
-   (options,args)=parser.parse_args(sys.argv[idx:])
-   
-   return (options, args)
+def read_flagged_antennas( filename ) :
+   antlist=[]
+
+   cnt = 0
+   if os.path.exists(filename) and os.stat(filename).st_size > 0 :
+      file=open(filename,'r')
+      data=file.readlines()
+      for line_tmp in data :
+         line = line_tmp.strip("\n")
+         if debug > 0 :
+            print("DEBUG1 : line = |%s|" % (line))
+         words = line.split(' \n')
+         if line[0] == '#' :
+            continue
+
+         t=int(words[0+0])
+         antlist.append( t )
+         if debug > 0 :
+            print("DEBUG : added %d" % (t))
+      file.close()
+
+   else :
+      print("WARNING : empty or non-existing file %s" % (filename))
 
 
-if __name__ == '__main__':
-   # 
-   listfile="list.txt"
-   if len(sys.argv) > 1:
-      listfile = sys.argv[1]
+   return (antlist)
 
-#   dateobs=sys.argv[2]
-#   gps=sys.argv[3]
-#   ra=sys.argv[4]
-#   dec=sys.argv[5]
-   
-   (options, args) = parse_options(1)
-   
-   if options.obsid <= 0 :
-      print("ERROR : obsid not specified -> cannot continue. Specify OBSID with options --obsid or -o")
-      sys.exit(-1)
-   
+def fix_metafits( listfile , obsid, n_scans=1, n_chans=768, inttime=1, flag_file=None ) :
+   site="MWA"
+   # 2021-09-29 icrs -> fk5
+   # frame='icrs'
+   frame='fk5'
+
    metafits_base = ("%d.metafits" % options.obsid)
    if not os.path.exists( metafits_base ) :
       print("ERROR : metafits file %s does not exist" % (metafits_base))
       sys.exit(-1)
-   
-   n_scans=1
-   n_chans=options.n_channels
-   inttime=1
-   site="MWA"
-   frame='icrs'
 
-   print("####################################################")
-   print("listfile       = %s"   % (listfile))
-   print("inttime        = %d"   % (inttime))
-#   print("n_channels     = %d" % (options.n_channels))
-   print("####################################################")
-   
+
    timestamps = read_text_file( listfile )
 
-#  def fix_metafits( fitsname , dateobs, gps, ra, dec, n_chans=768, n_scans=1, inttime=4 ) :
-   
    for timestamp in timestamps :
       fitsname = ( "%s.metafits" % timestamp )
       
@@ -143,9 +130,43 @@ if __name__ == '__main__':
       fits = pyfits.open(fitsname)
       azim     = float( fits[0].header['AZIMUTH'] )
       alt      = float( fits[0].header['ALTITUDE'] )
+      print("DEBUG : (azim,alt,uxtime) = (%.8f,%.8f,%.8f)" % (azim,alt,uxtime))
       ( ra_deg, dec_deg ) = azh2radec.azh2radec( uxtime, azim, alt, site=site, frame=frame )
             
-      fix_metafits_time_radec.fix_metafits_base( fits , fitsname, dateobs=utc_string, gps=gps, ra=ra_deg, dec=dec_deg, n_chans=n_chans, n_scans=n_scans, inttime=inttime )
+      fix_metafits_time_radec.fix_metafits_base( fits , fitsname, dateobs=utc_string, gps=gps, ra=ra_deg, dec=dec_deg, n_chans=n_chans, n_scans=n_scans, inttime=inttime, flag_file=flag_file )
+
+                                            
+def parse_options(idx):
+   parser=optparse.OptionParser()
+   parser.set_usage("""fix_metafits_time_radec_all.py""")
+   parser.add_option("--n_channels","--n_chan","--n_ch","-n",dest="n_channels",default=768,help="Number of channels [default: %default]",type="int")
+   parser.add_option('-t','--n_scans','--n_timesteps',dest="n_timesteps",default=1, help="Number of timesteps [default %default]", type="int")
+   parser.add_option('--flag_file','--flag_tiles_file',dest="flag_file",default=None, help="Flag file with flagged antennas (column Antenna in metafits file = 2nd column [default %default]")
+   parser.add_option('-i','--inttime','--inttime_sec',dest="inttime",default=1, help="Integration time in seconds [default %default]", type="int")
+   parser.add_option("--obsid","--OBSID","--obs","-o",dest="obsid",default=-1,help="OBSID [default: %default]",type="int")
+   (options,args)=parser.parse_args(sys.argv[idx:])
+   
+   return (options, args)
 
 
+if __name__ == '__main__':
+   # 
+   listfile="list.txt"
+   if len(sys.argv) > 1:
+      listfile = sys.argv[1]
 
+   (options, args) = parse_options(1)
+   
+   if options.obsid <= 0 :
+      print("ERROR : obsid not specified -> cannot continue. Specify OBSID with options --obsid or -o")
+      sys.exit(-1)
+   
+   print("####################################################")
+   print("listfile       = %s"   % (listfile))   
+   print("inttime        = %d"   % (options.inttime))
+   print("Flag file      = %s" % (options.flag_file))
+   print("n_channels     = %d" % (options.n_channels))
+   print("####################################################")   
+
+   fix_metafits( listfile, obsid=options.obsid, n_scans=options.n_timesteps, n_chans=options.n_channels, inttime=options.inttime, flag_file=options.flag_file )
+   

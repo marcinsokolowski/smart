@@ -141,11 +141,11 @@ fi
 cd $processing_dir
 if [[ ! -s gpu_list ]]; then
    if [[ -d ${gpufits_files_dir} ]]; then
-      echo "ls $gpufits_files_dir > gpu_list"
-      ls $gpufits_files_dir > gpu_list
+      echo "ls $gpufits_files_dir | grep fits | grep gpubox > gpu_list"
+      ls $gpufits_files_dir | grep fits | grep gpubox > gpu_list
    else      
-      echo "ssh galaxy \"ls ${gpufits_files_dir}\" > gpu_list"
-      ssh galaxy "ls ${gpufits_files_dir}" > gpu_list      
+      echo "ssh garrawarla.pawsey.org.au \"ls ${gpufits_files_dir}\" | grep fits | grep gpubox > gpu_list"
+      ssh garrawarla.pawsey.org.au "ls ${gpufits_files_dir}" | grep fits | grep gpubox > gpu_list      
    fi
 else
    echo "DEBUG : file gpu_list already exists with number of lines:"

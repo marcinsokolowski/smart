@@ -68,9 +68,18 @@ def parse_options(idx=0):
 
    return (options, args)
 
-def azh2radec( uxtime, azim, alt, site="MWA", frame='icrs' ) :
+# 20210929 : changes to make it compatible with azh2radec (libnova) and azh2ad (PIOTS) see notes in /home/msok/Desktop/PAWSEY/PaCER/logbook/20210928_check_tile_flagging_comparison.odt
+# changes :
+#    frame='icrs' -> frame='fk5'
+#    equinox=current_equinox
+# also : https://docs.astropy.org/en/stable/time/index.html
+def azh2radec( uxtime, azim, alt, site="MWA", frame='fk5' ) : # was icrs 
    ut_time = Time( uxtime ,format='unix')
-   newAltAzcoordiantes = SkyCoord(alt = alt, az = azim, obstime = ut_time, frame = 'altaz', unit='deg', location=MWA_POS )
+
+   t=ut_time.copy()
+   t.format='byear' # https://docs.astropy.org/en/stable/time/index.html
+   
+   newAltAzcoordiantes = SkyCoord(alt = alt, az = azim, obstime = ut_time, frame = 'altaz', unit='deg', location=MWA_POS, equinox=t )
    altaz = newAltAzcoordiantes.transform_to( frame )
    ra_deg, dec_deg = altaz.ra.deg, altaz.dec.deg
    print("(RA,DEC) = ( %.8f , %.8f )" % (ra_deg,dec_deg))

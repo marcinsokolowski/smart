@@ -76,6 +76,20 @@ if [[ -n "$7" && "$7" != "-" ]]; then
    remote_dir=$7
 fi
 
+jobs_per_file=50
+if [[ -n "$8" && "$8" != "-" ]]; then
+   jobs_per_file=$8
+fi
+
+max_timestamps=-
+if [[ -n "$9" && "$9" != "-" ]]; then
+   max_timestamps=$9
+fi
+
+calid=-1
+if [[ -n "${10}" && "${10}" != "-" ]]; then
+   calid=${10}
+fi
 
 force=0
 
@@ -83,6 +97,7 @@ echo "##########################################################################
 echo "PARAMETERS:"
 echo "#################################################################################"
 echo "obsid = $obsid ( $metafits )"
+echo "calid = $calid ( if < 0 -> no flagging applied in metafits files)"
 echo "gpufits_files_dir = $gpufits_files_dir"
 echo "processing_dir    = $processing_dir"
 echo "azim              = $azim"
@@ -90,11 +105,13 @@ echo "alt               = $alt"
 echo "n_channels        = $n_channels"
 echo "force             = $force"
 echo "remote_dir        = $remote_dir"
+echo "jobs_per_file     = $jobs_per_file"
+echo "max_timestamps    = $max_timestamps"
 echo "#################################################################################"
 
 # just to reflect on the parameters (check if correct)
-echo "Please verify if these parameters are correct ..."
-sleep 5
+# echo "Please verify if these parameters are correct ..."
+# sleep 5
 
 
 
@@ -103,16 +120,30 @@ sleep 5
 #   gpu_list=$6
 # fi
 
+flag_options=""
+if [[ $calid -gt 0 ]]; then
+   echo "getasvocal.sh ${calid} ${n_channels}"
+   getasvocal.sh ${calid} ${n_channels}     
+   
+   if [[ -s flagged_tiles.txt ]]; then
+      flag_options="--flag_file=flagged_tiles.txt"
+      echo "Flag file flagged_tiles.txt exists -> adding options $flag_options"      
+   else
+      echo "WARNING : file flagged_tiles.txt not found"
+   fi
+else
+   echo "WARNING : calibration CALID not specified -> cannot flag tiles in metafits files"
+fi
 
 # cd $gpufits_files_dir
 cd $processing_dir
 if [[ ! -s gpu_list ]]; then
    if [[ -d ${gpufits_files_dir} ]]; then
-      echo "ls $gpufits_files_dir > gpu_list"
-      ls $gpufits_files_dir > gpu_list
+      echo "ls $gpufits_files_dir | grep fits | grep gpubox > gpu_list"
+      ls $gpufits_files_dir | grep fits | grep gpubox > gpu_list
    else      
-      echo "ssh galaxy \"ls ${gpufits_files_dir}\" > gpu_list"
-      ssh galaxy "ls ${gpufits_files_dir}" > gpu_list      
+      echo "ssh garrawarla.pawsey.org.au \"ls ${gpufits_files_dir}\" | grep fits | grep gpubox > gpu_list"
+      ssh garrawarla.pawsey.org.au "ls ${gpufits_files_dir}" | grep fits | grep gpubox > gpu_list      
    fi
 else
    echo "DEBUG : file gpu_list already exists with number of lines:"
@@ -153,9 +184,8 @@ echo "python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=
 python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid
 
 
-# 2021-04-21 : was 50 -> 5 
-echo "${smart_bin}/pawsey/split_timesteps_to_jobs.sh 50
-${smart_bin}/pawsey/split_timesteps_to_jobs.sh 50
+echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh $jobs_per_file timestamps.txt $max_timestamps"
+$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh $jobs_per_file timestamps.txt $max_timestamps
 
 if [[ -n "$remote_dir" ]]; then
    echo "INFO : copying resulting metafits files and timestamp files to remote directory : $remote_dir"

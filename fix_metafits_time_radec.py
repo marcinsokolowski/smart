@@ -34,21 +34,6 @@ def mkdir_p(path):
          pass
       else: raise
 
-# parser.add_option('-c','--n_channels','--n_chans',dest="n_channels",default=768, help="Number of channels [default %default]", type="int")
-# parser.add_option('-t','--n_scans','--n_timesteps',dest="n_timesteps",default=1, help="Number of timesteps [default %default]", type="int")
-# parser.add_option('-i','--inttime','--inttime_sec',dest="inttime",default=4, help="Integration time in seconds [default %default]", type="int")
-
-                                            
-def parse_options(idx):
-   parser=optparse.OptionParser()
-   parser.set_usage("""fix_metafits_time_radec.py""")
-   parser.add_option("--n_channels","--n_chan","--n_ch","-n",dest="n_channels",default=768,help="Number of channels [default: %default]",type="int")
-   parser.add_option('-t','--n_scans','--n_timesteps',dest="n_timesteps",default=1, help="Number of timesteps [default %default]", type="int")
-   parser.add_option('--flag_file','--flag_tiles_file',dest="flag_file",default=None, help="Flag file with flagged antennas (column Antenna in metafits file = 2nd column [default %default]")
-   (options,args)=parser.parse_args(sys.argv[idx:])
-   
-   return (options, args)
-
 def read_flagged_antennas( filename ) :
    antlist=[]
 
@@ -76,8 +61,6 @@ def read_flagged_antennas( filename ) :
 
    return (antlist)
 
-
-
 def fix_metafits( fitsname , dateobs, gps, ra, dec, n_chans=768, n_scans=1, inttime=4 , flag_file=None ) :
    fits = pyfits.open(fitsname)
       
@@ -94,6 +77,8 @@ def fix_metafits_base( fits , fitsname, dateobs, gps, ra, dec, n_chans=768, n_sc
    fits[0].header['NSCANS']    = n_scans
    fits[0].header['INTTIME']   = inttime
    fits[0].header['NCHANS']    = n_chans
+   
+   print("DEBUG : set metadata %s / %d / %.8f / %.8f / %d / %d / %d" % (dateobs,int(gps),float(ra),float(dec),n_scans,inttime,n_chans))
 
    if flag_file is not None : 
      print("Flag file %s specified -> reading" % (flag_file))
@@ -121,6 +106,17 @@ def fix_metafits_base( fits , fitsname, dateobs, gps, ra, dec, n_chans=768, n_sc
    print("Writing fits %s" % (fitsname))
    fits.writeto( fitsname, overwrite=True ) 
 
+def parse_options(idx):
+   parser=optparse.OptionParser()
+   parser.set_usage("""fix_metafits_time_radec.py""")
+   parser.add_option("--n_channels","--n_chan","--n_ch","-n",dest="n_channels",default=768,help="Number of channels [default: %default]",type="int")
+   parser.add_option('-t','--n_scans','--n_timesteps',dest="n_timesteps",default=1, help="Number of timesteps [default %default]", type="int")
+   parser.add_option('--flag_file','--flag_tiles_file',dest="flag_file",default=None, help="Flag file with flagged antennas (column Antenna in metafits file = 2nd column [default %default]")
+   parser.add_option('-i','--inttime','--inttime_sec',dest="inttime",default=1, help="Integration time in seconds [default %default]", type="int")
+   (options,args)=parser.parse_args(sys.argv[idx:])
+
+   return (options, args)
+
 
 if __name__ == '__main__':
    # 
@@ -134,16 +130,12 @@ if __name__ == '__main__':
    
    (options, args) = parse_options(6)
    
-   n_scans = options.n_timesteps
-   n_chans=options.n_channels
-   inttime=1
-
    print("####################################################")
    print("fitsname       = %s"   % fitsname)
-   print("n_channels     = %d" % (options.n_channels))
-   print("inttime        = %d" % (inttime))
+   print("inttime        = %d" % (options.inttime))
    print("Flag file      = %s" % (options.flag_file))
+   print("n_channels     = %d" % (options.n_channels))
    print("####################################################")
 
-   fix_metafits( fitsname, dateobs, gps, ra, dec, n_chans=n_chans, n_scans=n_scans, inttime=inttime , flag_file=options.flag_file )
+   fix_metafits( fitsname, dateobs, gps, ra, dec, n_chans=options.n_channels, n_scans=options.n_timesteps, inttime=options.inttime , flag_file=options.flag_file )
 
