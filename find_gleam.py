@@ -51,6 +51,7 @@ RAD2DEG = ( 180.00 / math.pi )
 RAD2ARCSEC = ( ( 180.00 / math.pi )*3600. )
 
 gleam_default_file="/home/msok/MWA_Tools/catalogues/GLEAM_EGC.fits"
+# gleam_gp_file = "/home/msok/MWA_Tools/catalogues/GLEAM_GP/GLEAM_GAL.fits"
 g_debug_level=0
 
 class ImageSource :
@@ -917,6 +918,8 @@ def cross_match_file( filename ):
       
    
 def parse_options():
+   global gleam_default_file
+
    usage="Usage: %prog [options]\n"
    usage+='\tReads FITS image and fits GLEAM sources expected to be in this image, than compares with a list of sources passed in the text file to find flux calibration ratio\n'
    parser = OptionParser(usage=usage,version=1.00)
@@ -934,7 +937,10 @@ def parse_options():
    parser.add_option('-g','--gleam2sql',action="store_true",dest="gleam2sql",default=False, help="Convert GLEAM to SQL [default %s]")
    parser.add_option('-c','--freq_cc','--freq_channel','--frequency_channel',dest="freq_cc",default=145, help="Frequency channel [default %d]",type="int")
    parser.add_option('--cross_match_file', dest="cross_match_file", default=None, help="File with list of sources to cross-match with GLEAM")
+   parser.add_option('--gleam_path','--gleam_catalogue','--gleam',dest="gleam_cat_path",default="/home/msok/MWA_Tools/catalogues/GLEAM_EGC.fits",help="Full path to GLEAM catalogue [default %]")
    (options, args) = parser.parse_args()
+   
+   gleam_default_file = options.gleam_cat_path
 
    return (options, args)
    
@@ -954,6 +960,7 @@ if __name__ == '__main__':
    print "Convert GLEAM to SQL = %s" % (options.gleam2sql)
    print "Frequency channel = %d" % (options.freq_cc)
    print "cross_match_file = %s" % (options.cross_match_file)
+   print "GLEAM path       = %s" % (gleam_default_file)
    print "#################################################################"
 
    if options.cross_match_file is not None :
