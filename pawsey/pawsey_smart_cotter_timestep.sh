@@ -9,13 +9,14 @@
 # 
 # INFO :
 #   --tasks-per-node=8 means that so many instances of the program will be running on a single node - NOT THREADS for THREADS use : --cpus-per-node=8
+#   #SBATCH --cpus-per-gpu=1
 
 #SBATCH --account=pawsey0348
 #SBATCH --account=mwavcs
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-gpu=1
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=120gb
 #SBATCH --output=./smart.o%j
 #SBATCH --error=./smart.e%j
@@ -248,18 +249,7 @@ if [[ ! -s ${calid}.cal ]]; then
             echo "ln -s ${bin_file} ${calid}.bin"
             ln -s ${bin_file} ${calid}.bin
          fi
-      fi
-      
-      if [[ -s flagged_tiles.txt ]]; then
-         echo "INFO : file flagged_tiles.txt already exists (not overwritten)"
-      else
-         if [[ -s ${calid}_flagged_tiles.txt ]]; then
-            echo "cp ${calid}_flagged_tiles.txt flagged_tiles.txt"
-            cp ${calid}_flagged_tiles.txt flagged_tiles.txt
-         else
-            echo "WARNING : flagged tiles file ${calid}_flagged_tiles.txt not found -> please verify !!!"
-         fi
-      fi
+      fi      
    else
       echo "INFO : calibration solutions found (no wget needed)"
       bin_file=`ls *.bin | tail -1`
@@ -267,6 +257,19 @@ if [[ ! -s ${calid}.cal ]]; then
       echo "ln -s ${bin_file} ${calid}.bin"
       ln -s ${bin_file} ${calid}.bin
    fi
+fi
+
+if [[ -s flagged_tiles.txt ]]; then
+  echo "INFO : file flagged_tiles.txt already exists (not overwritten)"
+else
+  echo "cat *_flagged_tiles.txt > flagged_tiles.txt"
+  cat *_flagged_tiles.txt > flagged_tiles.txt
+#         if [[ -s ${calid}_flagged_tiles.txt ]]; then
+#            echo "cp ${calid}_flagged_tiles.txt flagged_tiles.txt"
+#            cp ${calid}_flagged_tiles.txt flagged_tiles.txt
+#         else
+#            echo "WARNING : flagged tiles file ${calid}_flagged_tiles.txt not found -> please verify !!!"
+#         fi
 fi
 
 

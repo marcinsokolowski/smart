@@ -47,6 +47,12 @@ if [[ -n "$9" && "$9" != "-" ]]; then
    end_second=$9
 fi
 
+beam_fits_file=""
+beam_avg_options=""
+if [[ -n "${10}" && "${10}" != "-" ]]; then
+   beam_fits_file=${10}
+   beam_avg_options=" -B $beam_fits_file"   
+fi
 
 
 # wsclean_1194350120_20171110115805_briggs-I-image.fits
@@ -84,7 +90,11 @@ fi
 if [[ ! -n "${outdir}" ]]; then
    outdir=${n_seconds}_seconds_maxrms${max_rms}
    if [[ $start_second -ge 0 && $end_second -ge 0 ]]; then
-      outdir=Range_${start_second}-${end_second}-seconds_maxrms${max_rms}
+      if [[ -n "${10}" && "${10}" != "-" ]]; then
+         outdir=Range_${start_second}-${end_second}-seconds_maxrms${max_rms}_BeamWeighted/
+      else
+         outdir=Range_${start_second}-${end_second}-seconds_maxrms${max_rms}
+      fi
    fi
 fi
 
@@ -122,6 +132,7 @@ echo "PARAMETERS:"
 echo "################################"
 echo "subdir = $subdir"
 echo "force  = $force"
+echo "beam_fits_file = $beam_fits_file (beam_avg_options = $beam_avg_options)"
 echo "################################"
 
 
@@ -147,8 +158,8 @@ do
 #   echo "time $SMART_DIR/bin/avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w \"(1200,700)-(1900,900)\""
 #   time $SMART_DIR/bin/avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w "(1200,700)-(1900,900)"
   
-      echo "time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${stokes}.out 2>&1"
-      time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${stokes}.out 2>&1                     
+      echo "time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} -i -S ${start_second} -E ${end_second} ${beam_avg_options} > ${outdir}/avg_${stokes}.out 2>&1"
+      time $SMART_DIR/bin/avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} -i -S ${start_second} -E ${end_second} ${beam_avg_options} > ${outdir}/avg_${stokes}.out 2>&1                     
    else
       echo "WARNING : file ${outdir}/mean_stokes_${stokes}.fits exists - use option force > 0 to re-process (7th parameter)"
    fi
@@ -166,8 +177,8 @@ do
          echo "WARNING : using existing list file fits_stokes_${pol} - use force > 0 (7th parameter > 0) to force re-creation"
       fi
 
-      echo "time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${pol}.out 2>&1"
-      time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} -i -S ${start_second} -E ${end_second} > ${outdir}/avg_${pol}.out 2>&1                     
+      echo "time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} -i -S ${start_second} -E ${end_second} ${beam_avg_options} > ${outdir}/avg_${pol}.out 2>&1"
+      time $SMART_DIR/bin/avg_images fits_stokes_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} -i -S ${start_second} -E ${end_second} ${beam_avg_options} > ${outdir}/avg_${pol}.out 2>&1                     
    else
       echo "WARNING : file ${outdir}/mean_stokes_${pol}.fits exists - use option force > 0 to re-process (7th parameter)"
    fi

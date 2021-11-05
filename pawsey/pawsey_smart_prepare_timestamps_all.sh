@@ -180,8 +180,8 @@ date
 #   fi   
 # done < timestamps.txt
 
-echo "python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid"
-python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid
+echo "python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid ${flag_options}"
+python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid ${flag_options}
 
 
 echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh $jobs_per_file timestamps.txt $max_timestamps"

@@ -14,7 +14,7 @@
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
-#SBATCH --mem=2gb
+#SBATCH --mem=64gb
 #SBATCH --output=./smart_rms_test.o%j
 #SBATCH --error=./smart_rms_test.e%j
 #SBATCH --export=NONE
@@ -40,6 +40,7 @@ if [[ -n "$4" && "$4" != "-" ]]; then
   radius=$4
 fi
 
+rms_radius=10
 
 # WARNING : this should realy be later in the code, but need it here to be used in the ls in the next line:
 echo "################################"
@@ -48,6 +49,7 @@ echo "################################"
 echo "List = $list"
 echo "(x,y)  = ($x,$y)"
 echo "radius = $radius"
+echo "rms_radius = $rms_radius"
 echo "################################"
 
 
@@ -59,6 +61,12 @@ echo "---------------------------------------- RMS from other method also for fu
 
 for fits in `cat $list`
 do
+   fits_base_tmp=${fits%%.fits}
+   fits_base=`basename $fits_base_tmp`
+
    echo "~/smart/bin/calcfits_bg $fits s ${x} ${y} -R ${radius}"
    ~/smart/bin/calcfits_bg $fits s ${x} ${y} -R ${radius}
+
+   echo "noise_mapper $fits -r ${rms_radius} -i -o noise_maps/${fits_base} ${options}"   
+   noise_mapper $fits -r ${rms_radius} -i -o noise_maps/${fits_base} ${options}
 done   
