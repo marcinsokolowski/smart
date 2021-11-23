@@ -25,6 +25,9 @@ center_x=1025
 center_y=1025
 radius=600
 
+C_ms  = 299798000.00 # m/s
+C_MHz = 299.79800000 # 
+
 def mkdir_p(path):
    try:
       os.makedirs(path)
@@ -157,6 +160,48 @@ def calc_max_baseline(table,n_ant=256) :
    print("max_baseline = %.2f" % (max_baseline))
    return max_baseline
 
+
+def count_baselines( table, obs_freq_mhz=154.88, min_uv_l=-10000, max_uv_l=1e20 ):
+   n_ant = len(table)
+   print("Number of antennas = %d" % (n_ant))
+
+   baseline_count = 0
+   all_baseline_count = 0
+   max_baseline = -1
+   wavelength = C_MHz / obs_freq_mhz
+   
+   print("Wavelength = %.4f [m]" % (wavelength))
+   
+   for i in range(0,n_ant):
+      n1 = table[i][9]
+      e1 = table[i][10]
+      h1 = table[i][11]
+
+      for j in range((i+1),n_ant):
+         n2 = table[j][9]
+         e2 = table[j][10]
+         h2 = table[j][11]
+
+         d = math.sqrt( (n1-n2)**2 + (e1-e2)**2 + (h1-h2)**2 )
+         d_l = d / wavelength         
+         
+         # count all baselines :
+         all_baseline_count += 1
+
+         # find maximum baseline
+         if d > max_baseline :
+            max_baseline = d 
+            
+         # count baselines within the requested UV range :
+         if d_l >= min_uv_l and d_l <= max_uv_l :
+            baseline_count += 1    
+
+
+   n_b = ((n_ant-1)*n_ant)/2
+   print("max_baseline = %.2f" % (max_baseline))
+   print("Number of baselines in uv_range %.4f - %.4f is %d out of all %d (%d)" % (min_uv_l,max_uv_l,baseline_count,all_baseline_count,n_b))
+   
+   return (baseline_count,all_baseline_count,max_baseline)
 
 def main() :
    if len(sys.argv) > 1:

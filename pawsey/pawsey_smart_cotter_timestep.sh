@@ -414,6 +414,12 @@ do
            
               echo "cp ../${peel_model_file} ."
               cp ../${peel_model_file} .
+              
+              # WARNiNG : this is a workaround for the fact that option --full-apply does not really create CORRECTED_DATA column into the CASA measurement set (as it should)
+              #           applysolutions will do it - otherwise peel crashes:
+              echo "WARNING : this is a workaround for the fact that cotter does not create CORRECTED_DATA column to the CASA measurement set when option --full-apply is used"
+              echo "applysolutions ${obsid}_${timestamp}.ms ${bin_file}"
+              applysolutions ${obsid}_${timestamp}.ms ${bin_file}
            
               mkdir mwapy/
               ln -sf ../../data mwapy/
