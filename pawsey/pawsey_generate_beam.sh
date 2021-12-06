@@ -40,6 +40,10 @@ if [[ -n "$4" && "$4" != "-" ]]; then
 fi
 
 beam_step=60
+if [[ -n "$5" && "$5" != "-" ]]; then
+   beam_step=$5
+fi
+
 
 echo "################################"
 echo "PARAMETERS:"
@@ -48,6 +52,7 @@ echo "obsid   = $obsid"
 echo "timestamp_file  = $timestamp_file"
 echo "postfix = $postfix"
 echo "freq_ch = $freq_ch"
+echo "beam_step = $beam_step"
 echo "################################"
 
 date
