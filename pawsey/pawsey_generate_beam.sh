@@ -108,7 +108,9 @@ do
          echo "last_beam_image = $last_beam_image"
       else
          echo "INFO : rest=$rest , linking previous beam model"
-         ln -s $last_beam_image
+                  
+         echo "ln -sf $last_beam_image"
+         ln -sf $last_beam_image
       fi
    fi
    
