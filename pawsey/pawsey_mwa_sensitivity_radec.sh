@@ -9,7 +9,7 @@
 
 #SBATCH --account=pawsey0348
 #SBATCH --account=mwavcs
-#SBATCH --time=01:00:00
+#SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8
 #SBATCH --mem=20gb
@@ -39,9 +39,9 @@ if [[ -n "$4" && "$4" != "-" ]]; then
    freq_cc=$4   
 fi
 
-gpstime=$obsid
+gpstime_start=$obsid
 if [[ -n "$5" && "$5" != "-" ]]; then
-   gpstime=$5
+   gpstime_start=$5
 fi
 
 inttime=1
@@ -49,15 +49,21 @@ if [[ -n "$6" && "$6" != "-" ]]; then
    inttime=$6
 fi
 
+duration=5400
+if [[ -n "$7" && "$7" != "-" ]]; then
+   duration=$7
+fi
+
 
 echo "##########################################################################"
 echo "PARAMETERS :"
 echo "##########################################################################"
-echo "obsid = $obsid"
-echo "(ra,dec) = ($ra,$dec) [deg]"
+echo "obsid             = $obsid"
+echo "(ra,dec)          = ($ra,$dec) [deg]"
 echo "Frequency channel = $freq_cc"
-echo "gpstime = $gpstime"
-echo "inttime = $inttime [sec]"
+echo "gpstime_start     = $gpstime_start"
+echo "duration          = $duration"
+echo "inttime           = $inttime [sec]"
 echo "##########################################################################"
 
 
@@ -70,5 +76,5 @@ else
    echo "INFO : metafits file ${obsid}.metafits already exists"
 fi
 
-echo "python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=${inttime} --bandwidth=30720000 --ra=${ra} --dec=${dec}"
-python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=${inttime} --bandwidth=30720000 --ra=${ra} --dec=${dec}
+echo "python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime_start} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=${inttime} --bandwidth=30720000 --ra=${ra} --dec=${dec} --dec=${dec} --observation_duration=${duration}"
+python ~/github/mwa_pb/scripts/mwa_sensitivity.py -g ${gpstime_start} -m full_EE --freq_cc ${freq_cc} --metafits ${obsid}.metafits --inttime=${inttime} --bandwidth=30720000 --ra=${ra} --dec=${dec} --observation_duration=${duration}
