@@ -146,6 +146,21 @@ do
    sleep $sleep_time
 done
 
+if [[ -s ${obsid}.metafits ]]; then
+   echo "DEBUG : calculating sensitivity for the mean images using information in the metafits file ${obsid}.metafits"
+      
+   n_timesteps=`cat ${file_template} | wc -l`
+   ra_deg=`echo $object | awk '{h=substr($1,1,2);m=substr($1,4,2);s=substr($1,7,2);ra_deg=h+((m*60.00+s)/3600.00)/15.00;sign_dec=substr($2,1,1);sign=1;if(sign_dec="-"){sign=-1;}d=substr($2,2,2);dm=substr($2,5,2);ds=substr($2,8,2);dec_dec=(sign*(d+(dm*60.000+ds)/3600.00));print ra_deg;}'`
+   dec_deg=`echo $object | awk '{h=substr($1,1,2);m=substr($1,4,2);s=substr($1,7,2);ra_deg=h+((m*60.00+s)/3600.00)/15.00;sign_dec=substr($2,1,1);sign=1;if(sign_dec="-"){sign=-1;}d=substr($2,2,2);dm=substr($2,5,2);ds=substr($2,8,2);dec_deg=(sign*(d+(dm*60.000+ds)/3600.00));print dec_deg;}'`
+   center_channel=`fitshdr ${obsid}.metafits | grep CENTCHAN | awk '{print $2}'`
+   
+   
+   echo "sbatch -p workq -M $sbatch_cluster pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}"
+   sbatch -p workq -M $sbatch_cluster pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}
+else
+   echo "WARNING : metafits file ${obsid}.metafits not found -> cannot calculate expected sensitivity of the mean image"
+fi   
+
 # 
 # NOT ANYMORE !!! Replaced by automatic submit at last file 
 #
