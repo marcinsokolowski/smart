@@ -89,8 +89,8 @@ do
          if [[ -s ${outdir}/mean_stokes_${stokes}_${i_str}.fits && -s ${outdir}/rms_stokes_${stokes}_${i_str}.fits ]]; then
             echo "INFO : files ${outdir}/mean_stokes_${stokes}_${i_str}.fits and ${outdir}/rms_stokes_${stokes}_${i_str}.fits already exist -> skipped, use force=1 to re-process"
          else
-            echo "avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits ${beam_avg_options}"
-            avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits ${beam_avg_options}
+            echo "avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits -r 1000000000 ${beam_avg_options}"
+            avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits -r 1000000000 ${beam_avg_options}
          fi
 
          # add first file to new tmp_list :            
