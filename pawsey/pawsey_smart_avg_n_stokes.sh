@@ -43,13 +43,35 @@ if [[ -n "$4" && "$4" != "-" ]]; then
 fi
 mkdir -p ${outdir}
 
+beam_fits_file=""
+beam_avg_options=""
+if [[ -n "${5}" && "${5}" != "-" ]]; then
+   beam_fits_file=${5}
+   beam_avg_options=" -B $beam_fits_file"   
+fi
+
+
+echo "################################"
+echo "PARAMETERS:"
+echo "################################"
+echo "beam_fits_file = $beam_fits_file (beam_avg_options = $beam_avg_options)"
+echo "################################"
+
+
+
 tmp_list="tmp_list_avg${n}"
 
 for stokes in `echo "I Q U V"`
 do
 #   ls wsclean*-image_${stokes}.fits > fits_stokes_${stokes}
-   echo "ls ${prefix}${stokes}${postfix}.fits > fits_stokes_${stokes}"
-   ls ${prefix}${stokes}${postfix}.fits > fits_stokes_${stokes}
+
+# WAS :
+#   echo "ls ${prefix}${stokes}${postfix}.fits > fits_stokes_${stokes}"
+#   ls ${prefix}${stokes}${postfix}.fits > fits_stokes_${stokes}
+
+   # ok for data in /astro/mwavcs/susmita/1150234552/
+   echo "ls ${prefix}${postfix}_${stokes}.fits > fits_stokes_${stokes}"
+   ls ${prefix}${postfix}_${stokes}.fits > fits_stokes_${stokes}
    
    index=0
    rm -f ${tmp_list}
@@ -67,8 +89,8 @@ do
          if [[ -s ${outdir}/mean_stokes_${stokes}_${i_str}.fits && -s ${outdir}/rms_stokes_${stokes}_${i_str}.fits ]]; then
             echo "INFO : files ${outdir}/mean_stokes_${stokes}_${i_str}.fits and ${outdir}/rms_stokes_${stokes}_${i_str}.fits already exist -> skipped, use force=1 to re-process"
          else
-            echo "avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits"
-            avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits
+            echo "avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits ${beam_avg_options}"
+            avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits ${beam_avg_options}
          fi
 
          # add first file to new tmp_list :            
