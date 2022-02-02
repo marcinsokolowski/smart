@@ -66,6 +66,10 @@ do
    echo "Generating lightcurve for source $name at (ra,dec) = ($ra_deg,$dec_deg) [deg]"
    date
 
+   # this file needs to be removed to repeat the script, otherwise it will decide that the lightcurve has already been generated
+   echo "rm -f ${list}_${stokes}.last_processed_file"
+   rm -f ${list}_${stokes}.last_processed_file
+
    echo "python $SMART_DIR/bin/dump_pixel_radec.py $list --ra=${ra_deg} --dec=${dec_deg} --radius=2 --calc_rms --outfile=${name}_${outnametag}_${stokes}.txt --last_processed_filestamp=${list}_${stokes}.last_processed_file"
    python $SMART_DIR/bin/dump_pixel_radec.py $list --ra=${ra_deg} --dec=${dec_deg} --radius=2 --calc_rms --outfile=${name}_${outnametag}_${stokes}.txt --last_processed_filestamp=${list}_${stokes}.last_processed_file
 done <  ${source_list}
