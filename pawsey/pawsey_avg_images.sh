@@ -138,6 +138,23 @@ echo "################################"
 
 mkdir -p ${outdir}
 
+# use fits_list_${stokes} if no fits_stokes_${stokes} exists:
+for stokes in `echo "I Q U V XX YY"`
+do
+   if [[ ! -s fits_stokes_${stokes} ]]; then
+      if [[ -s fits_list_${stokes} ]]; then
+         echo "DEBUG : list file fits_list_${stokes} exists -> using it as list file for average"
+
+         echo "cp fits_list_${stokes} fits_stokes_${stokes}"
+         cp fits_list_${stokes} fits_stokes_${stokes}
+      else
+         echo "DEBUG : neither of FITS list files fits_stokes_${stokes} nor fits_list_${stokes} exists -> will generate fits_stokes_${stokes} automatically"
+      fi
+   else
+      echo "DEBUG : FITS list file fits_stokes_${stokes} already exists -> no need to do anything here"
+   fi
+done
+
 for stokes in `echo "I Q U V"`
 do
    #  20160617221541      

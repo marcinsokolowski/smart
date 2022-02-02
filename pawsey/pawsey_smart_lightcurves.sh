@@ -18,8 +18,8 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --mem=120gb
-#SBATCH --output=./smart_avgnimages.o%j
-#SBATCH --error=./smart_avgnimages.e%j
+#SBATCH --output=./pawsey_smart_lightcurves.o%j
+#SBATCH --error=./pawsey_smart_lightcurves.e%j
 #SBATCH --export=NONE
 source $HOME/smart/bin/$COMP/env
 
@@ -38,27 +38,35 @@ if [[ -n "$3" && "$3" != "-" ]]; then
    stokes=$3
 fi
 
+outnametag=mean_fits_stokes
+if [[ -n "$4" && "$4" != "-" ]]; then
+   outnametag=$4
+fi
+
 
 echo "################################"
 echo "PARAMETERS:"
 echo "################################"
 echo "fits list file = $list"
 echo "source list    = $source_list"
-echo "Stokes = $stokes"
+echo "Stokes         = $stokes"
+echo "outnametag     = $outnametag"
 echo "################################"
 
 while read line
 do
+   echo
+   echo "Processing line |$line|"
    name=`echo $line | awk '{print $1;}'`
    ra_deg=`echo $line | awk '{print $2;}'`
    dec_deg=`echo $line | awk '{print $3;}'`
    
    echo
    echo
-   echo "Generating lightcurve for source $name at (ra,dec) = ($ra,$dec) [deg]"
+   echo "Generating lightcurve for source $name at (ra,dec) = ($ra_deg,$dec_deg) [deg]"
    date
 
-   echo "python $SMART_DIR/bin/dump_pixel_radec.py $list --ra=${ra_deg} --dec=${dec_deg} --radius=2 --calc_rms --outfile=${name}_mean_fits_stokes_${stokes}.txt --last_processed_filestamp=${list}_${stokes}.last_processed_file"
-   python $SMART_DIR/bin/dump_pixel_radec.py $list --ra=${ra_deg} --dec=${dec_deg} --radius=2 --calc_rms --outfile=${name}_mean_fits_stokes_${stokes}.txt --last_processed_filestamp=${list}_${stokes}.last_processed_file
+   echo "python $SMART_DIR/bin/dump_pixel_radec.py $list --ra=${ra_deg} --dec=${dec_deg} --radius=2 --calc_rms --outfile=${name}_${outnametag}_${stokes}.txt --last_processed_filestamp=${list}_${stokes}.last_processed_file"
+   python $SMART_DIR/bin/dump_pixel_radec.py $list --ra=${ra_deg} --dec=${dec_deg} --radius=2 --calc_rms --outfile=${name}_${outnametag}_${stokes}.txt --last_processed_filestamp=${list}_${stokes}.last_processed_file
 done <  ${source_list}
 
