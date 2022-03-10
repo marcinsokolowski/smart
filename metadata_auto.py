@@ -47,6 +47,7 @@ def parse_options():
    parser.add_option('--outfile','--out_file',dest="outfile",default=None, help="Output file [default %default]")
 #   parser.add_option('-b','--bad','--flagged',action="store_true",dest="list_flagged",default=False, help="List flagged only")
    parser.add_option('--all','--save_all',dest="save_all",action="store_true", default=False, help="Save all [default %default]")
+   parser.add_option('--dump_ant_positions','--save_ant_positions',dest="save_ant_positions",action="store_true", default=False, help="Save antenna positions [default %default]")
    (options, args) = parser.parse_args()
                                 
    return (options, args)
@@ -160,6 +161,27 @@ def calc_max_baseline(table,n_ant=256) :
    print("max_baseline = %.2f" % (max_baseline))
    return max_baseline
 
+def save_ant_positions( table , out_f , n_input=256 ) :
+   # saving in sorted order :
+   for i in range(0,n_input):
+      idx=table[i][0]
+      tile_idx=table[i][1] # Antenna Index in CASA 
+      tile_id=table[i][2]
+      tile_name=table[i][3]
+      tile_pol=table[i][4]
+      delays=table[i][12]
+      flag=table[i][7]
+      el_length=table[i][8]
+      north_m=table[i][9]
+      east_m=table[i][10]
+      height_m=table[i][11]
+
+      if tile_pol == "X" :
+         line = ("%d %s %.8f %.8f %.8f\n" % (tile_idx,tile_name,north_m,east_m,height_m))
+         out_f.write( line )
+      
+  
+   
 
 def count_baselines( table, obs_freq_mhz=154.88, min_uv_l=-10000, max_uv_l=1e20 ):
    n_ant = len(table)
@@ -221,6 +243,7 @@ def main() :
    print("fitsname       = %s -> obsID = %s" % (fitsname,obsid))
    print("Max baseline   = %s" % (options.max_baseline))
    print("outfile        = %s" % (outfile))
+   print("Save antenna positions = %s" % (options.save_ant_positions))
    print("####################################################")
 
    fits = pyfits.open(fitsname)
@@ -228,6 +251,10 @@ def main() :
    print("Read fits file %s" % fitsname)
 
    out_f = open( outfile, "w")
+
+   if options.save_ant_positions :
+      save_ant_positions( table , out_f )
+      sys.exit(-1)
    
    max_baseline = -100 
    if options.max_baseline or options.save_all :

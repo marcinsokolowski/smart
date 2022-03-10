@@ -8,7 +8,7 @@
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
-#SBATCH --mem=250gb
+#SBATCH --mem=350gb
 #SBATCH --output=./smart_dump_lc_pixels.o%j
 #SBATCH --error=./smart_dump_lc_pixels.e%j
 #SBATCH --export=NONE
