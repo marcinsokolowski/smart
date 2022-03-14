@@ -63,7 +63,9 @@ for timestamp in `cat ${timestamp_file}`
 do
    echo
    echo
+   pwd
    cd $timestamp
+   pwd
    pwd
    echo "Index = $index"
 
