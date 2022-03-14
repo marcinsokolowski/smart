@@ -73,15 +73,15 @@ aperture_radius=options.aperture_radius
 if options.outfile is not None :
    outfile = options.outfile
 
-print "###############################################################################"
-print "PARAMETERS:"
-print "###############################################################################"
-print "Finding maximum pixel around position (x_c,y_c) = (%.2f,%.2f) in radius %d pixels" % (x_c,y_c,radius)
-print "aperture_radius  = %d" % (aperture_radius)
-print "use_max_peak_flux = %s" % (options.use_max_peak_flux)
-print "outfile = %s" % (outfile)
-print "use_raw_value = %s" % (options.use_raw_value)
-print "###############################################################################"
+print("###############################################################################")
+print("PARAMETERS:")
+print("###############################################################################")
+print("Finding maximum pixel around position (x_c,y_c) = (%.2f,%.2f) in radius %d pixels" % (x_c,y_c,radius))
+print("aperture_radius  = %d" % (aperture_radius))
+print("use_max_peak_flux = %s" % (options.use_max_peak_flux))
+print("outfile = %s" % (outfile))
+print("use_raw_value = %s" % (options.use_raw_value))
+print("###############################################################################")
 
 
 x_c_orig = x_c
@@ -118,7 +118,7 @@ for fitsfile in fitslist_data :
 
    t=Time(dateobs)
    t_unix=t.replicate(format='unix')
-   print "Read FITS file %s has dateobs = %s -> %.2f unixtime" % (fitsfile,dateobs,t_unix.value)
+   print("Read FITS file %s has dateobs = %s -> %.2f unixtime" % (fitsfile,dateobs,t_unix.value))
    
 
    data = None
@@ -131,7 +131,7 @@ for fitsfile in fitslist_data :
    sum = 0.00
    count = 0
    if radius > 0 :
-       print "radius = %d -> finding maximum pixel around position (%d,%d)" % (radius,x_c,y_c)
+       print("radius = %d -> finding maximum pixel around position (%d,%d)" % (radius,x_c,y_c))
    
        max_val = -1e6
        max_xc  = -1
@@ -149,13 +149,13 @@ for fitsfile in fitslist_data :
                        max_val = val
                        max_xc = xx
                        max_yc = yy
-                       print "\tDEBUG : max value = %.8f found at (%d,%d)" % (max_val,max_xc,max_yc)
+                       print("\tDEBUG : max value = %.8f found at (%d,%d)" % (max_val,max_xc,max_yc))
 
        if max_xc > 0 and max_yc > 0 :
            x_c = max_xc
            y_c = max_yc 
           
-           print "INFO : overwritting original position (%d,%d) with position of maximum value = %.2f at (%d,%d)" % (x_c_orig,y_c_orig,max_val,x_c,y_c)
+           print("INFO : overwritting original position (%d,%d) with position of maximum value = %.2f at (%d,%d)" % (x_c_orig,y_c_orig,max_val,x_c,y_c))
 
    # data = fits[0].data[cc] # first dimension is coarse channel 
    pixel_value = data[x_c,y_c]
@@ -183,16 +183,16 @@ for fitsfile in fitslist_data :
             line = line + str( data[xx,yy] ) + " "
             
          if options.verbose > 1 :
-            print line
+            print("%s" % line)
             
       if options.verbose > 0 :
-         print "pixel_sum := %.4f / %d = %.4f vs. max pixel = %.4f" % (pixel_sum,pixel_count,(pixel_sum / pixel_count),data[x_c,y_c])
+         print("pixel_sum := %.4f / %d = %.4f vs. max pixel = %.4f" % (pixel_sum,pixel_count,(pixel_sum / pixel_count),data[x_c,y_c]))
                   
       pixel_sum = pixel_sum / pixel_count
       sum = pixel_sum
 
    if options.verbose > 0 :
-      print "(%d,%d) = %.4f Jy" % (x_c,y_c,pixel_value)                                                                                       
+      print("(%d,%d) = %.4f Jy" % (x_c,y_c,pixel_value))                                                                                       
 
    # time_value = t_unix.value
    time_value = idx*options.time_step
@@ -208,4 +208,4 @@ for fitsfile in fitslist_data :
                                                                                        
 
 out_file.close()
-print "Saved to file %s" % outfile
+print("Saved to file %s" % outfile)

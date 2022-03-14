@@ -99,6 +99,16 @@ do
          index=$((index+1))
       fi      
    done
+   
+   echo "DEBUG : main loop finished - processing last portion of files:"
+   i_str=`echo $index | awk '{printf("%05d",$1);}'`
+         
+   if [[ -s ${outdir}/mean_stokes_${stokes}_${i_str}.fits && -s ${outdir}/rms_stokes_${stokes}_${i_str}.fits ]]; then
+      echo "INFO : files ${outdir}/mean_stokes_${stokes}_${i_str}.fits and ${outdir}/rms_stokes_${stokes}_${i_str}.fits already exist -> skipped, use force=1 to re-process"
+   else
+      echo "avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits -r 1000000000 ${beam_avg_options}"
+      avg_images ${tmp_list} ${outdir}/mean_stokes_${stokes}_${i_str}.fits ${outdir}/rms_stokes_${stokes}_${i_str}.fits -r 1000000000 ${beam_avg_options}
+   fi
 
    cd ${outdir}   
    ls mean_stokes_${stokes}_?????.fits > mean_fits_stokes_${stokes}_list
