@@ -29,14 +29,21 @@ if [[ -n "$2" && "$2" != "-" ]]; then
    window=$2
 fi
 
+outdir="lc/"
+if [[ -n "$3" && "$3" != "-" ]]; then
+   outdir="$3"
+fi
+
+
 echo "################################"
 echo "PARAMETERS:"
 echo "################################"
 echo "fits list file = $list"
+echo "window = $window"
+echo "outdir = $outdir"
 echo "################################"
 
 date
-echo "srun dump_lc $list $window "
-srun dump_lc $list $window 
+echo "srun dump_lc $list $window -o $outdir"
+srun dump_lc $list $window -o $outdir
 date
-
