@@ -24,10 +24,13 @@ outdir_prefix="lc"
 if [[ -n "$5" && "$5" != "-" ]]; then
    outdir_prefix="$5"
 fi
+outdir=${outdir_prefix}_${pol}
 
 
-echo "ls ${template}/${fits_file_template} > ${outdir_prefix}/fits_list_${pol}"
-ls ${template}/${fits_file_template} > ${outdir_prefix}/fits_list_${pol}
+mkdir -p ${outdir}
 
-echo "sbatch pawsey_dump_lc_pixels.sh ${outdir_prefix}/fits_list_${pol} \"${window}\" ${outdir_prefix}_${pol}"
-sbatch pawsey_dump_lc_pixels.sh ${outdir_prefix}/fits_list_${pol} "${window}" ${outdir_prefix}_${pol}
+echo "ls ${template}/${fits_file_template} > ${outdir}/fits_list_${outdir_prefix}_${pol}"
+ls ${template}/${fits_file_template} > ${outdir}/fits_list_${outdir_prefix}_${pol}
+
+echo "sbatch pawsey_dump_lc_pixels.sh ${outdir}/fits_list_${outdir_prefix}_${pol} \"${window}\" ${outdir}"
+sbatch pawsey_dump_lc_pixels.sh ${outdir}/fits_list_${outdir_prefix}_${pol} "${window}" ${outdir}
