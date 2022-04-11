@@ -29,8 +29,14 @@ outdir=${outdir_prefix}_${pol}
 
 mkdir -p ${outdir}
 
-echo "ls ${template}/${fits_file_template} > ${outdir}/fits_list_${outdir_prefix}_${pol}"
-ls ${template}/${fits_file_template} > ${outdir}/fits_list_${outdir_prefix}_${pol}
+pwd
+# echo "ls ${template}/${fits_file_template} > ${outdir}/fits_list_${outdir_prefix}_${pol}"
+# ls ${template}/${fits_file_template} > ${outdir}/fits_list_${outdir_prefix}_${pol}
 
+# find 20???????????? -name "wsclean*-I-dirty.fits"|sort
+echo "find ${template} -name ${fits_file_template} | sort > ${outdir}/fits_list_${outdir_prefix}_${pol}"
+find ${template} -name ${fits_file_template} | sort > ${outdir}/fits_list_${outdir_prefix}_${pol}
+
+pwd
 echo "sbatch pawsey_dump_lc_pixels.sh ${outdir}/fits_list_${outdir_prefix}_${pol} \"${window}\" ${outdir}"
 sbatch pawsey_dump_lc_pixels.sh ${outdir}/fits_list_${outdir_prefix}_${pol} "${window}" ${outdir}
