@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-#  sbatch -p workq pawsey_smarter_avg_images.sh
+#  sbatch -p workq pawsey_avg_10ms.sh
 
 # Same as ../smart_cotter_image_all.sh , just the SBATCH lines below are added 
 # so after update in smart_cotter_image_all.sh please update also this one by :
@@ -41,6 +41,12 @@ if [[ -n "$3" && "$3" != "-" ]]; then
    outdir=$3
 fi
 
+avg_final=0
+if [[ -n "$4" && "$4" != "-" ]]; then
+   avg_final=$4
+fi
+
+
 force=0
 max_rms=100000000000.00
 
@@ -60,10 +66,14 @@ do
    do
       yy_fits=${xx_fits%%-XX-dirty.fits}-YY-dirty.fits
       i_fits=${xx_fits%%-XX-dirty.fits}-I-dirty.fits
-      
-      ls $xx_fits $yy_fits > fits_list_xxyy
-      echo "avg_images fits_list_xxyy ${i_fits} tmprms.out -r ${max_rms} > avg_xxyy.out 2>&1"
-      avg_images fits_list_xxyy ${i_fits} tmprms.out -r ${max_rms} > avg_xxyy.out 2>&1
+
+      if [[ -s ${i_fits} ]]; then       
+         echo "INFO : image $i_fits already exists -> skipped"
+      else
+         ls $xx_fits $yy_fits > fits_list_xxyy
+         echo "avg_images fits_list_xxyy ${i_fits} tmprms.out -r ${max_rms} > avg_xxyy.out 2>&1"
+         avg_images fits_list_xxyy ${i_fits} tmprms.out -r ${max_rms} > avg_xxyy.out 2>&1
+      fi
    done
       
    for pol in `echo "XX YY I"`
@@ -71,8 +81,12 @@ do
       echo "ls wsclean_${obsid}_${t}_briggs_timeindex???-${pol}-dirty.fits > fits_list_${pol}"
       ls wsclean_${obsid}_${t}_briggs_timeindex???-${pol}-dirty.fits > fits_list_${pol}
    
-      echo "time avg_images fits_list_${pol} mean_stokes_${pol}.fits rms_stokes_${pol}.fits -r ${max_rms} -i > avg_${pol}.out 2>&1"
-      time avg_images fits_list_${pol} mean_stokes_${pol}.fits rms_stokes_${pol}.fits -r ${max_rms} -i > avg_${pol}.out 2>&1                  
+      if [[ -s mean_stokes_${pol}.fits && -s rms_stokes_${pol}.fits ]]; then
+         echo "INFO : images mean_stokes_${pol}.fits and rms_stokes_${pol}.fits already exist -> skipped"
+      else
+         echo "time avg_images fits_list_${pol} mean_stokes_${pol}.fits rms_stokes_${pol}.fits -r ${max_rms} -i > avg_${pol}.out 2>&1"
+         time avg_images fits_list_${pol} mean_stokes_${pol}.fits rms_stokes_${pol}.fits -r ${max_rms} -i > avg_${pol}.out 2>&1                  
+      fi
    done
    
    # average X and Y to pseudo-stokes-I
@@ -83,17 +97,23 @@ do
    cd ../       
 done
 
-date
-pwd
-mkdir -p ${outdir}
-# average all images :
-for pol in `echo "XX YY I"`
-do
-   ls ${subdir}/mean_stokes_${pol}.fits > fits_list_${pol}
+# averaging all mean 1-second images into a single mean image of the entire observation 
+
+if [[ $avg_final -gt 0 ]]; then
+   date
+   pwd
+   mkdir -p ${outdir}
+   # average all images :
+   for pol in `echo "XX YY I"`
+   do
+      ls ${subdir}/mean_stokes_${pol}.fits > fits_list_${pol}
    
-   echo "time avg_images fits_list_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -i > ${outdir}/avg_${pol}.out 2>&1"
-   time avg_images fits_list_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -i > ${outdir}/avg_${pol}.out 2>&1 
-done
+      echo "time avg_images fits_list_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -i > ${outdir}/avg_${pol}.out 2>&1"
+      time avg_images fits_list_${pol} ${outdir}/mean_stokes_${pol}.fits ${outdir}/rms_stokes_${pol}.fits -r ${max_rms} -i > ${outdir}/avg_${pol}.out 2>&1 
+   done
+else
+   echo "WARNING : final averaging is not required"
+fi   
 
 
 # calculate RMS 

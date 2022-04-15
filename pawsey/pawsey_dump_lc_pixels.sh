@@ -44,6 +44,7 @@ echo "outdir = $outdir"
 echo "################################"
 
 date
-echo "srun dump_lc $list $window -o $outdir"
-srun dump_lc $list $window -o $outdir
+# added -I to ignore missing images (if not processed yet)
+echo "srun dump_lc $list -w \"$window\" -o $outdir -I "
+srun dump_lc $list -w "$window" -o $outdir -I 
 date
