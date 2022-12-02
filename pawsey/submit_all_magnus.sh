@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# module use /software/projects/director2183/msok/setonix/modules/
+# module use /software/projects/director2183/msok/setonix/modules/zen3/gcc/11.2.0/
+# module load smart/msok
+
+if [[ $PAWSEY_CLUSTER == "setonix" ]]; then
+   echo "DEBUG : Setonix system -> specific source command required"
+   echo "source $MYSOFTWARE/py-virtual-env/bin/activate"
+   source $MYSOFTWARE/py-virtual-env/bin/activate
+else
+   echo "DEBUG : non Setonix system does not require this command"
+fi
+
+
 echo "DEBUG : |$1|$2|$3|$4|$5|$6|"
 
 obsid=1194350120
