@@ -11,6 +11,9 @@
 #   --tasks-per-node=8 means that so many instances of the program will be running on a single node - NOT THREADS for THREADS use : --cpus-per-node=8
 #   #SBATCH --cpus-per-gpu=1
 
+# WARNING : #SBATCH --account= will soon be removed to make it more portable between different supercomputers. 
+#           then it will be better to use sbatch --account=??? option to specify which account to use for this
+
 #SBATCH --account=pawsey0348
 #SBATCH --account=mwavcs
 #SBATCH --time=23:59:00
@@ -21,12 +24,39 @@
 #SBATCH --output=./smart.o%j
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
-echo "source $HOME/smart/bin/$COMP/env"
-source $HOME/smart/bin/$COMP/env
+
+if [[ $PAWSEY_CLUSTER == "setonix" ]]; then
+   # SETONIX SPECIFIC OPTIONS :
+   echo "DEBUG : Setonix system -> loading required modules ..."
+   module use /software/projects/director2183/msok/setonix/modules/
+   module use /software/projects/director2183/msok/setonix/modules/zen3/gcc/11.2.0/
+   module load smart/msok
+   module load python/3.9.15
+   export OPENBLAS_NUM_THREADS=1
+
+   echo "source $MYSOFTWARE/py-virtual-env/bin/activate"
+   source $MYSOFTWARE/py-virtual-env/bin/activate
+   
+   echo "export SMART_DIR=$MYSOFTWARE/smart/"
+   export SMART_DIR=$MYSOFTWARE/smart/
+else
+   echo "DEBUG : Setonix system -> specific source command required"
+   echo "source $HOME/smart/bin/$COMP/env"
+   source $HOME/smart/bin/$COMP/env
+fi   
 
 which cotter
 echo "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
 
+# TEST OF astropy was needed temporarily :
+# pwd
+# echo "from astropy.coordinates import SkyCoord" > test_python.py
+# echo "import astropy" >> test_python.py
+# echo "print(\"OK !!!\n\")" >> test_python.py
+# which python
+# echo "/software/projects/director2183/msok/py-virtual-env/bin/python ./test_python.py"
+# cat test_python.py
+# /software/projects/director2183/msok/py-virtual-env/bin/python ./test_python.py
 
 # requirements :
 # 1/ proper metafits file with NCHANS, NSCANS and INTTIME set properly - otherwise cotter will protest !!!
@@ -479,11 +509,11 @@ done
 
 if [[ $is_last -gt 0 ]]; then
    if [[ $is_idg -gt 0 ]]; then
-      echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh \"??????????????\" \"-I-image\""
-      sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh "??????????????" "-I-image" 
+      echo "sbatch $SMART_DIR/bin/pawsey/pawsey_avg_images.sh \"??????????????\" \"-I-image\""
+      sbatch $SMART_DIR/bin/pawsey/pawsey_avg_images.sh "??????????????" "-I-image" 
    else
-      echo "sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh"
-      sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_avg_images.sh   
+      echo "sbatch $SMART_DIR/bin/pawsey/pawsey_avg_images.sh"
+      sbatch $SMART_DIR/bin/pawsey/pawsey_avg_images.sh   
    fi
 fi
 
