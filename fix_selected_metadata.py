@@ -76,7 +76,7 @@ parser.add_option('-f','--float','--float',action="store_true",dest="float",defa
 
 parser.add_option('-c','--n_channels','--n_chans',dest="n_channels",default=-768, help="Number of channels [default %default]", type="int")
 parser.add_option('-t','--n_scans','--n_timesteps',dest="n_timesteps",default=-1, help="Number of timesteps [default %default]", type="int")
-parser.add_option('-i','--inttime','--inttime_sec',dest="inttime",default=-4, help="Integration time in seconds [default %default]", type="int")
+parser.add_option('-i','--inttime','--inttime_sec',dest="inttime",default=-4, help="Integration time in seconds [default %default]", type="float")
 
 
 # parser.add_option("--ap_radius","-a","--aperture","--aperture_radius",dest="aperture_radius",default=0,help="Sum pixels in aperture radius [default: %default]",type="int")

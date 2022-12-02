@@ -10,9 +10,18 @@ if [[ -n "$2" && "$2" != "-" ]]; then
    timefile_template=$2
 fi
 
+wsclean_options=""
+if [[ -n "$3" && "$3" != "-" ]]; then
+   wsclean_options="$3"
+fi
+
+size=4096
+if [[ -n "$4" && "$4" != "-" ]]; then
+   size=$4
+fi
 
 for timestamp in `cat ${timefile_template}`
 do
-   echo "sbatch -p gpuq -M $sbatch_cluster ./submit_10ms_dirty_images.sh ${obsid} ${timestamp}"
-   sbatch -p gpuq -M $sbatch_cluster ./submit_10ms_dirty_images.sh ${obsid} ${timestamp} 
+   echo "sbatch -p gpuq -M $sbatch_cluster $SMART_DIR/bin/pawsey/submit_10ms_dirty_images.sh ${obsid} ${timestamp} \"${wsclean_options}\" ${size}" 
+   sbatch -p gpuq -M $sbatch_cluster $SMART_DIR/bin/pawsey/submit_10ms_dirty_images.sh ${obsid} ${timestamp} "${wsclean_options}" ${size}
 done

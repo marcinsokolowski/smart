@@ -32,6 +32,17 @@ if [[ -n "$2" && "$2" != "-" ]]; then
    timestamp=$2
 fi
 
+wsclean_options=""
+if [[ -n "$3" && "$3" != "-" ]]; then
+   wsclean_options="$3"
+fi
+
+size=4096
+if [[ -n "$4" && "$4" != "-" ]]; then
+   size=$4
+fi
+
+
 start=0
 if [[ -s last_started.txt ]]; then
    start=`cat last_started.txt`
@@ -52,8 +63,8 @@ do
 
    start_ux=`date +%s`   
 
-   echo "srun wsclean -name wsclean_${obsid}_${timestamp}_briggs_timeindex${start_str} -j 6 -size 4096 4096 -pol XX,YY -abs-mem 120 -weight briggs -1 -scale 0.0047 -niter 0 -minuv-l 30 -join-polarizations -interval $start $end ${obsid}_${timestamp}.ms"
-   srun wsclean -name wsclean_${obsid}_${timestamp}_briggs_timeindex${start_str} -j 6 -size 4096 4096 -pol XX,YY -abs-mem 120 -weight briggs -1 -scale 0.0047 -niter 0 -minuv-l 30 -join-polarizations -interval $start $end ${obsid}_${timestamp}.ms
+   echo "srun wsclean -name wsclean_${obsid}_${timestamp}_briggs_timeindex${start_str} -j 6 -size ${size} ${size} -pol XX,YY -abs-mem 120 -weight briggs -1 -scale 0.0047 -niter 0 -minuv-l 30 -join-polarizations -interval $start $end ${wsclean_options} ${obsid}_${timestamp}.ms"
+   srun wsclean -name wsclean_${obsid}_${timestamp}_briggs_timeindex${start_str} -j 6 -size ${size} ${size} -pol XX,YY -abs-mem 120 -weight briggs -1 -scale 0.0047 -niter 0 -minuv-l 30 -join-polarizations -interval $start $end ${wsclean_options} ${obsid}_${timestamp}.ms
    
    end_ux=`date +%s`
    diff=$(($end_ux-$start_ux))

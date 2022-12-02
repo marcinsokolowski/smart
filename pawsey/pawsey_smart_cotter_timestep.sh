@@ -272,6 +272,11 @@ else
 #         fi
 fi
 
+touch flagged_tiles.txt
+# flag_tiles_list=`cat flagged_tiles.txt | awk '{printf("%d,",$1);}'`
+flag_tiles_list=`cat flagged_tiles.txt | awk -v list="" '{list=list sprintf("%d,",$1);}END{out=substr(list,1,length(list)-1);print out;}'`
+echo "DEBUG : flag_tiles_list= $flag_tiles_list"
+
 
 for timestamp in `cat ${timestamp_file}`
 do
@@ -339,34 +344,32 @@ do
    
             # 2020-07-11 - -norfi removed 
             ux_start=`date +%s`
-            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos -flagantenna $flag_tiles_list -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos -flagantenna $flag_tiles_list -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
             ux_end=`date +%s`
             ux_diff=$(($ux_end-$ux_start))
             echo "COTTER_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" > benchmarking.txt
 
 
-            if [[ -d ${obsid}_${timestamp}.ms ]]; then   
+# 2022-11-30 : casa flagging is no longer needed as this is done in cotter (see above : -flagantenna $flag_tiles_list)
+           if [[ -d ${obsid}_${timestamp}.ms ]]; then   
                date   
-               echo "flagdata('${obsid}_${timestamp}.ms',mode='unflag')" > unflag.py
-#               echo "casapy -c unflag.py"
-#               casapy -c unflag.py 
-
-              if [[ -s ../flagged_tiles.txt ]]; then
-                 echo "rm -f flag_files.py"
-                 rm -f flag_files.py
-                 
-#                 echo "flagdata(vis='${obsid}_${timestamp}.ms',mode='clip',clipminmax=[0.001,2500])" > flag_files.py
-                 echo > flag_files.py
-                 
-                 for tile in `cat ../flagged_tiles.txt`
-                 do
-                    echo "flagdata(vis='${obsid}_${timestamp}.ms',antenna='${tile}')" >> flag_files.py                    
-                 done
-                 
-                 echo "casapy --nologger -c flag_files.py"
-                 casapy --nologger -c flag_files.py
-              fi 
+#               echo "flagdata('${obsid}_${timestamp}.ms',mode='unflag')" > unflag.py
+#
+#              if [[ -s ../flagged_tiles.txt ]]; then
+#                 echo "rm -f flag_files.py"
+#                 rm -f flag_files.py
+#                 
+#                 echo > flag_files.py
+#                 
+#                 for tile in `cat ../flagged_tiles.txt`
+#                 do
+#                    echo "flagdata(vis='${obsid}_${timestamp}.ms',antenna='${tile}')" >> flag_files.py                    
+#                 done
+#                 
+#                 echo "casapy --nologger -c flag_files.py"
+#                 casapy --nologger -c flag_files.py
+#              fi 
       
               date   
               if [[ -s ${cal} && ${use_casa_cal} -gt 0 ]]; then
