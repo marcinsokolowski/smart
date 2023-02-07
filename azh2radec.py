@@ -79,6 +79,8 @@ def azh2radec( uxtime, azim, alt, site="MWA", frame='fk5' ) : # was icrs
    t=ut_time.copy()
    t.format='byear' # https://docs.astropy.org/en/stable/time/index.html
    
+   print("azh2radec input : {} , {}, {},  {} , {}".format(alt,azim,ut_time,MWA_POS,t))
+   
    newAltAzcoordiantes = SkyCoord(alt = alt, az = azim, obstime = ut_time, frame = 'altaz', unit='deg', location=MWA_POS, equinox=t )
    altaz = newAltAzcoordiantes.transform_to( frame )
    ra_deg, dec_deg = altaz.ra.deg, altaz.dec.deg

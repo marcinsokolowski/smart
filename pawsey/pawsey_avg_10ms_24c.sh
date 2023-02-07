@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-#  sbatch -p workq pawsey_avg_10ms_24c.sh
+#  sbatch -p workq pawsey_avg_10ms.sh
 
 # Same as ../smart_cotter_image_all.sh , just the SBATCH lines below are added 
 # so after update in smart_cotter_image_all.sh please update also this one by :

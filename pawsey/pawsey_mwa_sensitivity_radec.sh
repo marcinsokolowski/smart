@@ -7,8 +7,6 @@
 #    cp ../smart_cotter_image_all.sh pawsey_smart_cotter_timestep.sh
 #    Paste SBATCH lines into new version of pawsey_smart_cotter_timestep.sh and add -l in #!/bin/bash -l line 
 
-#SBATCH --account=pawsey0348
-#SBATCH --account=mwavcs
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=8

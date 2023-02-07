@@ -9,9 +9,7 @@
 #    cp ../smart_cotter_image_all.sh pawsey_smart_cotter_timestep.sh
 #    Paste SBATCH lines into new version of pawsey_smart_cotter_timestep.sh and add -l in #!/bin/bash -l line 
 
-# SETONIX : --account=director2183 - use explicit option of sbatch vs. 
-#SBATCH --account=pawsey0348
-#SBATCH --account=mwavcs
+#SBATCH --account=pawsey0809
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
@@ -21,17 +19,10 @@
 #SBATCH --error=./smart_avgimages.e%j
 #SBATCH --export=NONE
 
-if [[ $PAWSEY_CLUSTER == "setonix" ]]; then
-   echo "INFO : Setonix cluster detected"
-   module load msfitslib/master-b37lvzx
-else
-   if [[ -s $HOME/smart/bin/$COMP/env ]]; then
-      echo "source $HOME/smart/bin/$COMP/env"
-      source $HOME/smart/bin/$COMP/env
-   else
-      echo "WARNING : environment file $HOME/smart/bin/$COMP/env is missing, but this may be perfectly ok on non-Garrawarla systems"
-   fi   
-fi   
+# source $HOME/smart/bin/$COMP/env
+
+module use /software/projects/director2183/setonix/modules/zen3/gcc/12.1.0
+module load msfitslib/master-b37lvzx
 
 # WARNING : this should realy be later in the code, but need it here to be used in the ls in the next line:
 subdir="??????????????"
@@ -185,8 +176,8 @@ do
       fi
          
 # old with some rediculosuly large window :            
-#   echo "time $SMART_DIR/bin/avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w \"(1200,700)-(1900,900)\""
-#   time $SMART_DIR/bin/avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w "(1200,700)-(1900,900)"
+#   echo "time avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w \"(1200,700)-(1900,900)\""
+#   time avg_images fits_stokes_${stokes} mean_stokes_${stokes}.fits rms_stokes_${stokes}.fits -r 10 -w "(1200,700)-(1900,900)"
   
       echo "time avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C \"${rms_center}\" -c ${rms_radius} -i -S ${start_second} -E ${end_second} ${beam_avg_options} > ${outdir}/avg_${stokes}.out 2>&1"
       time avg_images fits_stokes_${stokes} ${outdir}/mean_stokes_${stokes}.fits ${outdir}/rms_stokes_${stokes}.fits -r ${max_rms} -C "${rms_center}" -c ${rms_radius} -i -S ${start_second} -E ${end_second} ${beam_avg_options} > ${outdir}/avg_${stokes}.out 2>&1                     
@@ -217,9 +208,8 @@ done
 # calculate RMS 
 cd ${outdir}
 ls *.fits > fits_list
-# removed : -p workq -M $sbatch_cluster
-echo "sbatch $SMART_DIR/bin/pawsey/pawsey_rms_test.sh"
-sbatch $SMART_DIR/bin/pawsey/pawsey_rms_test.sh 
+echo "sbatch pawsey/pawsey_rms_test.sh"
+sbatch pawsey/pawsey_rms_test.sh 
 cd -
 
 # benchmarks :

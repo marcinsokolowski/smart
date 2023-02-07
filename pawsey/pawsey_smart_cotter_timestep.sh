@@ -11,11 +11,6 @@
 #   --tasks-per-node=8 means that so many instances of the program will be running on a single node - NOT THREADS for THREADS use : --cpus-per-node=8
 #   #SBATCH --cpus-per-gpu=1
 
-# WARNING : #SBATCH --account= will soon be removed to make it more portable between different supercomputers. 
-#           then it will be better to use sbatch --account=??? option to specify which account to use for this
-
-#SBATCH --account=pawsey0348
-#SBATCH --account=mwavcs
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
@@ -25,38 +20,44 @@
 #SBATCH --error=./smart.e%j
 #SBATCH --export=NONE
 
-if [[ $PAWSEY_CLUSTER == "setonix" ]]; then
-   # SETONIX SPECIFIC OPTIONS :
-   echo "DEBUG : Setonix system -> loading required modules ..."
-   module use /software/projects/director2183/msok/setonix/modules/
-   module use /software/projects/director2183/msok/setonix/modules/zen3/gcc/11.2.0/
-   module load smart/msok
-   module load python/3.9.15
-   export OPENBLAS_NUM_THREADS=1
+# echo "source $HOME/smart/bin/$COMP/env"
+# source $HOME/smart/bin/$COMP/env
 
-   echo "source $MYSOFTWARE/py-virtual-env/bin/activate"
-   source $MYSOFTWARE/py-virtual-env/bin/activate
-   
-   echo "export SMART_DIR=$MYSOFTWARE/smart/"
-   export SMART_DIR=$MYSOFTWARE/smart/
-else
-   echo "DEBUG : Setonix system -> specific source command required"
-   echo "source $HOME/smart/bin/$COMP/env"
-   source $HOME/smart/bin/$COMP/env
-fi   
+# module load wsclean/0.1blink-ggk23gw
+# module load cotter/0.1blink-tsodp64
+# module load wsclean/v0.2blink-bvji5ga 
+# module load cotter/0.1blink-dqqrbs3
+# module load python/3.10.8
+
+# SETONIX SPECIFIC OPTIONS :
+module use /software/projects/director2183/msok/setonix/modules/
+module use /software/projects/director2183/msok/setonix/modules/zen3/gcc/11.2.0/
+module use /software/setonix/current/modules/zen3/gcc/12.1.0/libraries
+module use /software/projects/director2183/setonix/modules/zen3/gcc/12.1.0
+module load smart/msok
+module load python/3.9.15
+export OPENBLAS_NUM_THREADS=1
+
+echo "source $MYSOFTWARE/py-virtual-env/bin/activate"
+source $MYSOFTWARE/py-virtual-env/bin/activate
+
+
+export SMART_DIR=/software/projects/director2183/msok/smart/
 
 which cotter
 echo "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
 
-# TEST OF astropy was needed temporarily :
-# pwd
-# echo "from astropy.coordinates import SkyCoord" > test_python.py
-# echo "import astropy" >> test_python.py
-# echo "print(\"OK !!!\n\")" >> test_python.py
-# which python
-# echo "/software/projects/director2183/msok/py-virtual-env/bin/python ./test_python.py"
-# cat test_python.py
-# /software/projects/director2183/msok/py-virtual-env/bin/python ./test_python.py
+pwd
+echo "from astropy.coordinates import SkyCoord" > test_python.py
+echo "import astropy" >> test_python.py
+echo "print(\"OK !!!\n\")" >> test_python.py
+which python
+echo "/software/projects/director2183/msok/py-virtual-env/bin/python ./test_python.py"
+cat test_python.py
+/software/projects/director2183/msok/py-virtual-env/bin/python ./test_python.py
+
+# exit
+
 
 # requirements :
 # 1/ proper metafits file with NCHANS, NSCANS and INTTIME set properly - otherwise cotter will protest !!!
@@ -382,8 +383,8 @@ do
 
 
 # 2022-11-30 : casa flagging is no longer needed as this is done in cotter (see above : -flagantenna $flag_tiles_list)
-           if [[ -d ${obsid}_${timestamp}.ms ]]; then   
-               date   
+            if [[ -d ${obsid}_${timestamp}.ms ]]; then   
+               date
 #               echo "flagdata('${obsid}_${timestamp}.ms',mode='unflag')" > unflag.py
 #
 #              if [[ -s ../flagged_tiles.txt ]]; then

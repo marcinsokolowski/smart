@@ -1,4 +1,3 @@
-#!/opt/caastro/ext/anaconda/bin/python
 
 # import pdb
 import astropy.io.fits as pyfits
@@ -25,9 +24,6 @@ center_x=1025
 center_y=1025
 radius=600
 
-C_ms  = 299798000.00 # m/s
-C_MHz = 299.79800000 # 
-
 def mkdir_p(path):
    try:
       os.makedirs(path)
@@ -47,7 +43,6 @@ def parse_options():
    parser.add_option('--outfile','--out_file',dest="outfile",default=None, help="Output file [default %default]")
 #   parser.add_option('-b','--bad','--flagged',action="store_true",dest="list_flagged",default=False, help="List flagged only")
    parser.add_option('--all','--save_all',dest="save_all",action="store_true", default=False, help="Save all [default %default]")
-   parser.add_option('--dump_ant_positions','--save_ant_positions',dest="save_ant_positions",action="store_true", default=False, help="Save antenna positions [default %default]")
    (options, args) = parser.parse_args()
                                 
    return (options, args)
@@ -161,69 +156,6 @@ def calc_max_baseline(table,n_ant=256) :
    print("max_baseline = %.2f" % (max_baseline))
    return max_baseline
 
-def save_ant_positions( table , out_f , n_input=256 ) :
-   # saving in sorted order :
-   for i in range(0,n_input):
-      idx=table[i][0]
-      tile_idx=table[i][1] # Antenna Index in CASA 
-      tile_id=table[i][2]
-      tile_name=table[i][3]
-      tile_pol=table[i][4]
-      delays=table[i][12]
-      flag=table[i][7]
-      el_length=table[i][8]
-      north_m=table[i][9]
-      east_m=table[i][10]
-      height_m=table[i][11]
-
-      if tile_pol == "X" :
-         line = ("%d %s %.8f %.8f %.8f\n" % (tile_idx,tile_name,north_m,east_m,height_m))
-         out_f.write( line )
-      
-  
-   
-
-def count_baselines( table, obs_freq_mhz=154.88, min_uv_l=-10000, max_uv_l=1e20 ):
-   n_ant = len(table)
-   print("Number of antennas = %d" % (n_ant))
-
-   baseline_count = 0
-   all_baseline_count = 0
-   max_baseline = -1
-   wavelength = C_MHz / obs_freq_mhz
-   
-   print("Wavelength = %.4f [m]" % (wavelength))
-   
-   for i in range(0,n_ant):
-      n1 = table[i][9]
-      e1 = table[i][10]
-      h1 = table[i][11]
-
-      for j in range((i+1),n_ant):
-         n2 = table[j][9]
-         e2 = table[j][10]
-         h2 = table[j][11]
-
-         d = math.sqrt( (n1-n2)**2 + (e1-e2)**2 + (h1-h2)**2 )
-         d_l = d / wavelength         
-         
-         # count all baselines :
-         all_baseline_count += 1
-
-         # find maximum baseline
-         if d > max_baseline :
-            max_baseline = d 
-            
-         # count baselines within the requested UV range :
-         if d_l >= min_uv_l and d_l <= max_uv_l :
-            baseline_count += 1    
-
-
-   n_b = ((n_ant-1)*n_ant)/2
-   print("max_baseline = %.2f" % (max_baseline))
-   print("Number of baselines in uv_range %.4f - %.4f is %d out of all %d (%d)" % (min_uv_l,max_uv_l,baseline_count,all_baseline_count,n_b))
-   
-   return (baseline_count,all_baseline_count,max_baseline)
 
 def main() :
    if len(sys.argv) > 1:
@@ -243,7 +175,6 @@ def main() :
    print("fitsname       = %s -> obsID = %s" % (fitsname,obsid))
    print("Max baseline   = %s" % (options.max_baseline))
    print("outfile        = %s" % (outfile))
-   print("Save antenna positions = %s" % (options.save_ant_positions))
    print("####################################################")
 
    fits = pyfits.open(fitsname)
@@ -251,10 +182,6 @@ def main() :
    print("Read fits file %s" % fitsname)
 
    out_f = open( outfile, "w")
-
-   if options.save_ant_positions :
-      save_ant_positions( table , out_f )
-      sys.exit(-1)
    
    max_baseline = -100 
    if options.max_baseline or options.save_all :

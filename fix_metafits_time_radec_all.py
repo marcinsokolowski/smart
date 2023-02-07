@@ -118,10 +118,13 @@ def fix_metafits( listfile , obsid, n_scans=1, n_chans=768, inttime=1, flag_file
       
       print("Updating keyword in metafits %s"  % (fitsname))
       
-      uxtime = time.mktime(datetime.strptime( timestamp , "%Y%m%d%H%M%S").timetuple()) + 8*3600 # +8 hours for Perth
+      # WARNING : time.mktime converts LOCALTIME to UXTIME !!! NOT UTC TIME
+      uxtime0 = time.mktime(datetime.strptime( timestamp , "%Y%m%d%H%M%S").timetuple()) # + 8*3600 # +8 hours for Perth
+      uxtime = uxtime0 + 8*3600
       t = Time( uxtime  ,format="unix" )
       t_gps = t.replicate(format='gps')
       gps = t_gps.value
+      print("DEBUG : %s UTC -> ux0 = %d -> ux = %d" % (timestamp,uxtime0,uxtime))
       
       t_utc = t.replicate( format='datetime' )
       utc_string = t_utc.value.strftime("%Y-%m-%dT%H:%M:%S")

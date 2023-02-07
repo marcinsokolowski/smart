@@ -24,9 +24,9 @@ if [[ -n "$1" && "$1" != "-" ]]; then
    list=$1
 fi
 
-options="" # e.g. "-w (x_start,y_start)-(x_end,y_end)"
+window="" # e.g. "-w (x_start,y_start)-(x_end,y_end)"
 if [[ -n "$2" && "$2" != "-" ]]; then
-   options=$2
+   window=$2
 fi
 
 outdir="lc/"
@@ -34,16 +34,17 @@ if [[ -n "$3" && "$3" != "-" ]]; then
    outdir="$3"
 fi
 
+
 echo "################################"
 echo "PARAMETERS:"
 echo "################################"
 echo "fits list file = $list"
+echo "window = $window"
 echo "outdir = $outdir"
-echo "options = $options"
 echo "################################"
 
 date
 # added -I to ignore missing images (if not processed yet)
-echo "srun dump_lc $list ${options} -o $outdir -I"
-srun dump_lc $list ${options} -o $outdir -I 
+echo "srun dump_lc $list -w \"$window\" -o $outdir -I "
+srun dump_lc $list -w "$window" -o $outdir -I 
 date

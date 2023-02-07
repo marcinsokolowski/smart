@@ -10,10 +10,7 @@
 #SBATCH --output=./pawsey_avg_fitslist.o%j
 #SBATCH --error=./pawsey_avg_fitslist.e%j
 #SBATCH --export=NONE
-if [[ -s $HOME/smart/bin/magnus/env ]]; then
-   echo "source $HOME/smart/bin/magnus/env"
-   source $HOME/smart/bin/magnus/env
-fi   
+source $HOME/smart/bin/magnus/env
 
 # (12.14 - 4.02 - 6*1.306)*100 = 28.400 ~= 28 
 # see ./pulse_time_index.py
@@ -28,14 +25,9 @@ if [[ -n "$2" && "$2" != "-" ]]; then
    outdir="$2"
 fi
 
-generate_list=1
-if [[ -n "$3" && "$3" != "-" ]]; then
-   generate_list=$3
-fi
-
 copy_and_remove=0
-if [[ -n "$4" && "$4" != "-" ]]; then
-   copy_and_remove=$4
+if [[ -n "$3" && "$3" != "-" ]]; then
+   copy_and_remove=$3
 fi
 
 listfile=list_${start_timeindex_str}.txt
@@ -47,12 +39,8 @@ mkdir -p ${outdir}
 # cp dispersed_path_dm20.870.txt ${outdir}/
 # cd ${outdir}
 
-if [[ $generate_list -gt 0 ]]; then
-   echo "pawsey_generate_image_list.sh ${start_timeindex} ${listfile}"
-   pawsey_generate_image_list.sh ${start_timeindex} ${listfile}
-else
-   echo "WARNING : list generation is not required"
-fi
+echo "pawsey_generate_image_list.sh ${start_timeindex} ${listfile}"
+pawsey_generate_image_list.sh ${start_timeindex} ${listfile}
 
 echo "time avg_images ${listfile} ${outdir}/mean.fits ${outdir}/rms.fits -r ${max_rms} -i > ${outdir}/avg_${stokes}.out 2>&1"
 time avg_images ${listfile} ${outdir}/mean.fits ${outdir}/rms.fits -r ${max_rms} -i > ${outdir}/avg_${stokes}.out 2>&1                     

@@ -10,7 +10,7 @@ metafits_base=`echo $ms | cut -b 12-25`
 ms_b=${ms%%.ms}
 
 options=""
-n_iter=10000 # 100000 too much 
+n_iter=100000
 if [[ -n "$2" && "$2" != "-" ]]; then
    n_iter=$2
 fi
@@ -25,59 +25,17 @@ if [[ -n "$4" && "$4" != "-" ]]; then
    beam_corr_type=$4
 fi
 
-clean_thresh=0.050 # with 0.020 looks rubbish
+clean_thresh=0.050
 
 if [[ $n_iter -gt 0 ]]; then
    options="-join-polarizations"
 fi
 
-imagesize=2048
+imagesize=8096
 if [[ -n "$5" && "$5" != "-" ]]; then
    imagesize=$5
 fi
 
-wsclean_pbcorr=0
-wsclean_beam_opt="-pol XX,YY,XY,YX"
-if [[ -n "$6" && "$6" != "-" ]]; then
-   wsclean_pbcorr=$6
-fi
-if [[ $wsclean_pbcorr -gt 0 ]]; then
-   wsclean_beam_opt="-apply-primary-beam -mwa-path /pawsey/mwa -pol i,q,u,v"
-fi
-
-wsclean_type="standard"
-if [[ -n "$7" && "$7" != "-" ]]; then
-   wsclean_type=$7
-fi
-
-wsclean_options=""
-if [[ -n "$8" && "$8" != "-" ]]; then
-   wsclean_options="$8"
-fi
-is_idg=`echo $wsclean_options | awk '{if(index($0,"idg")>0){print 1;}else{print 0;}}'`
-if [[ $is_idg -gt 0 ]]; then
-   # IDG :
-   wsclean_beam_opt="-pol iquv"
-   wsclean_pbcorr=0 # no need for beam correction when IDG is used (it performs beam correction and produces Stokes images itself)
-fi
-
-pixscale_param=""
-if [[ -n "$9" && "$9" != "-" ]]; then
-   pixscale_param=$9
-fi
-
-# constants (can be converted to parameters later):
-memory_gb=128
-
-echo "#########################################"
-echo "PARAMETERS of wsclean_auto_optimised.sh :"
-echo "#########################################"
-echo "pixscale_param = $pixscale_param"
-echo "memory_gb      = $memory_gb"
-echo "#########################################"
-
-
-# PEELING :
 peel_model_file="peel_model.txt"
 
 
@@ -91,14 +49,14 @@ if [[ $comp == "mwa-process02" ]]; then
 #    export PATH=/home/msok/mwa_software/anoko/anoko/chgcentre/build/:$PATH
 fi
 
-# wsclean_path="/group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean"
-#if [[ $cluster == "mwa" || $cluster == "garrawarla" ]]; then # mwa = garrawarla
-wsclean_path=`which wsclean`
-#fi
-
+wsclean_path="/group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean"
+if [[ $cluster == "mwa" || $cluster == "garrawarla" ]]; then # mwa = garrawarla
+   wsclean_path=`which wsclean`
+   echo "DEBUG : mwa cluster detected -> wsclean_path = $wsclean_path"
+fi
+echo "DEBUG : cluster = $cluster -> wsclean_path = $wsclean_path"
 
 NCPUS=4
-srun_command=srun 
 
 metafits=${metafits_base}.metafits
 metainfo=${metafits%%metafits}metadata_info
@@ -141,11 +99,6 @@ else
    exit -2;
 fi
 
-if [[ -n $pixscale_param && $pixscale_param != "-" ]]; then
-   echo "INFO : overwritting pixscale = $pixscale with external value = $pixscale_param"
-   pixscale=$pixscale_param
-fi
-
 echo "------------------------------------------------------------"
 echo "cat ${metainfo}"
 cat ${metainfo}
@@ -165,37 +118,14 @@ else
    echo "WARNING : file ${peel_model_file} does not exist -> no peeling required"
 fi
 
-briggs=-1
-clean="-scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85"
-if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
-   clean="-mfs-weighting -scale $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8"
-else
-   if [[ "$wsclean_type" == "jay" || "$wsclean_type" == "jai" ]]; then 
-      # pixscale="-scale 16asec" vs. I have 20 arcsec
-      echo "WSCLEAN type = Jai -> special clean settings"
-      # WARNING : used to be a default for Jai's version, but it should be as requested by the user not overwritten here:
-      # n_iter=100000 
-      clean="-scale $pixscale -multiscale -mgain 0.8 -niter $n_iter -auto-mask 3 -auto-threshold 1.2 -local-rms -circular-beam"
-      briggs=0
-   fi
-fi
-
-echo "###########################################################"
-echo "PARAMETERS:"
-echo "###########################################################"
-echo "wsclean_type   = $wsclean_type"
-echo "wsclean_pbcorr = $wsclean_pbcorr ( wsclean_beam_opt = $wsclean_beam_opt )"
-echo "clean          = $clean"
-echo "briggs         = $briggs"
-echo "###########################################################"
-
 
 # old 
 # echo "wsclean -name wsclean_${obsid} -j $NCPUS -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 # wsclean -name wsclean_${obsid} -j $NCPUS -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -abs-mem 64 -weight briggs -1 -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
+# pixscale="-scale 16asec" vs. I have 20 arcsec
+clean="-multiscale -mgain 0.8 -niter $n_iter -auto-mask 3 -auto-threshold 1.2 -local-rms -circular-beam -apply-primary-beam -mwa-path /pawsey/mwa -pol i"
 
-ux_start=`date +%s`
 # if [[ $obsnum -gt 1219795217 ]]; then
 if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper condition 
     # gps >= 20180901_000000 1219795217  -> compact configuration 
@@ -204,8 +134,8 @@ if [[ $max_baseline_int -lt 2800 ]]; then # 20190309 - changed for a proper cond
     # echo "GPS time > 1219795217 ( 20180901_000000 ) -> using COMPACT CONFIGURATION SETTINGS"
     echo "max_baseline_int = $max_baseline_int < 2800 -> using COMPACT CONFIGURATION SETTINGS"
     
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
-    $srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
+    echo "time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}"
+    time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}
 else
     # GPS time <= 1219795217 ( 20180901_000000 ) -> using LONG-BASELINES SETTINGS"
     echo "max_baseline_int = $max_baseline_int >= 2800 -> using LONG-BASELINES SETTINGS"
@@ -218,13 +148,10 @@ else
 #    echo "wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}"
 #    wsclean -name wsclean_${obsid}_uniform -j 6 -size ${imagesize} ${imagesize}  -pol XX,YY,XY,YX -absmem 64 -weight uniform -scale $pixscale -niter ${n_iter} ${options} ${ms}
 
-    echo "$srun_command time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}"
-    $srun_command time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  ${wsclean_beam_opt} -abs-mem $memory_gb -weight briggs $briggs $clean -minuv-l 30 ${options} ${wsclean_options} ${ms}
+    # mgain 0.5 or 0.85 
+    echo "time $wsclean_path -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}"
+    time $wsclean_path  -name wsclean_${ms_b}_briggs -j 6 -size ${imagesize} ${imagesize}  -abs-mem 128 -weight briggs 0 -scale $pixscale $clean -minuv-l 30 ${options} ${ms}
 fi    
-ux_end=`date +%s`
-ux_diff=$(($ux_end-$ux_start))
-echo "WSCLEAN : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
-
 
 fits_xx=wsclean_${ms_b}_briggs-XX-${beam_corr_type}.fits
 fits_yy=wsclean_${ms_b}_briggs-YY-${beam_corr_type}.fits
@@ -232,16 +159,10 @@ fits_xy=wsclean_${ms_b}_briggs-XY-${beam_corr_type}.fits
 fits_xyi=wsclean_${ms_b}_briggs-XYi-${beam_corr_type}.fits
 bname=wsclean_${ms_b}_briggs
 
-ux_start=`date +%s`
-if [[ $wsclean_pbcorr -gt 0 ]]; then
-   echo "INFO : primary beam correction already executed by wsclean"
-else
-   echo "time python /scratch/director2183/msok/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm"
-   time python /scratch/director2183/msok/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm
-fi   
-ux_end=`date +%s`
-ux_diff=$(($ux_end-$ux_start))
-echo "BEAM_CORR : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" >> benchmarking.txt
+
+echo "INFO : wsclean generated primary beam corrected images"
+# echo "time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm"
+# time python ~/github/mwa_pb/scripts/beam_correct_image.py --xx_file=${fits_xx} --yy_file=${fits_yy} --xy_file=${fits_xy} --xyi_file=${fits_xyi} --metafits ${metafits} --model=2016 --out_basename=${bname}-${beam_corr_type} --zenith_norm
 
 
 # long baselines :

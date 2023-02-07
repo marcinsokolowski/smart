@@ -64,8 +64,8 @@ do
    fits_base_tmp=${fits%%.fits}
    fits_base=`basename $fits_base_tmp`
 
-   echo "calcfits_bg $fits s ${x} ${y} -R ${radius}"
-   calcfits_bg $fits s ${x} ${y} -R ${radius}
+   echo "~/smart/bin/calcfits_bg $fits s ${x} ${y} -R ${radius}"
+   ~/smart/bin/calcfits_bg $fits s ${x} ${y} -R ${radius}
 
    echo "noise_mapper $fits -r ${rms_radius} -i -o noise_maps/${fits_base} ${options}"   
    noise_mapper $fits -r ${rms_radius} -i -o noise_maps/${fits_base} ${options}

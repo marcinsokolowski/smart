@@ -18,6 +18,11 @@ echo "DEBUG : COMP = $COMP"
 
 if [[ $PAWSEY_CLUSTER == "setonix" ]]; then
    echo "INFO : Setonix cluster detected"   
+   
+   # fixed the issue of wrong timezone on compute nodes (UTC-6h) vs. login node is correct (UTC+8h) :
+   export TZ=Australia/Perth
+   module use /software/setonix/current/modules/zen3/gcc/12.1.0/astro-applications
+   module load wcslib/7.3
 else
    echo "INFO : Non-Setonix cluster detected"
 
@@ -166,28 +171,7 @@ cd ${processing_dir}
 pwd
 date
 
-# while read line # example 
-# do
-#   t=$line
-#   
-#   if [[ ! -s ${t}.metafits || $force -gt 0 ]]; then    
-#      t_dtm=`echo $t | awk '{print substr($1,1,8)"_"substr($1,9);}'`
-#      t_dateobs=`echo $t | awk '{print substr($1,1,4)"-"substr($1,5,2)"-"substr($1,7,2)"T"substr($1,9,2)":"substr($1,11,2)":"substr($1,13,2);}'`
-#      t_ux=`date2date -ut2ux=${t_dtm} | awk '{print $3;}'`
-#      t_gps=`ux2gps! $t_ux`
-#
-#      echo "azh2radec $t_ux mwa $azim $alt"
-#      ra=`azh2radec $t_ux mwa $azim $alt | awk '{print $4;}'`
-#      dec=`azh2radec $t_ux mwa $azim $alt | awk '{print $6;}'`
-#   
-#      cp $metafits ${t}.metafits
-#      echo "python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec --n_channels=${n_channels}"
-#      python ${smart_bin}/fix_metafits_time_radec.py ${t}.metafits $t_dateobs $t_gps $ra $dec  --n_channels=${n_channels}
-#   else
-#      echo "INFO : ${t}.metafits already exists -> ignored"
-#   fi   
-# done < timestamps.txt
-
+which python
 echo "python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid ${flag_options}"
 python ${smart_bin}/fix_metafits_time_radec_all.py timestamps.txt --obsid=$obsid ${flag_options}
 
