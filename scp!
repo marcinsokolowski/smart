@@ -1,0 +1,8 @@
+#!/bin/bash
+
+rsync -avP susmita@susmita:~/smart/bin/*.sh .
+rsync -avP susmita@susmita:~/smart/bin/*.py .
+cd pawsey/
+rsync -avP susmita@susmita:~/smart/bin/pawsey/*.sh .
+rsync -avP susmita@susmita:~/smart/bin/pawsey/*.py .
+
