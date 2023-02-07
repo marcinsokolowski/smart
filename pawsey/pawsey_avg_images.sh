@@ -9,29 +9,16 @@
 #    cp ../smart_cotter_image_all.sh pawsey_smart_cotter_timestep.sh
 #    Paste SBATCH lines into new version of pawsey_smart_cotter_timestep.sh and add -l in #!/bin/bash -l line 
 
-# SETONIX : --account=director2183 - use explicit option of sbatch vs. 
 #SBATCH --account=pawsey0348
 #SBATCH --account=mwavcs
 #SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=1
 #SBATCH --mem=120gb
 #SBATCH --output=./smart_avgimages.o%j
 #SBATCH --error=./smart_avgimages.e%j
 #SBATCH --export=NONE
-
-if [[ $PAWSEY_CLUSTER == "setonix" ]]; then
-   echo "INFO : Setonix cluster detected"
-   module load msfitslib/master-b37lvzx
-else
-   if [[ -s $HOME/smart/bin/$COMP/env ]]; then
-      echo "source $HOME/smart/bin/$COMP/env"
-      source $HOME/smart/bin/$COMP/env
-   else
-      echo "WARNING : environment file $HOME/smart/bin/$COMP/env is missing, but this may be perfectly ok on non-Garrawarla systems"
-   fi   
-fi   
+source $HOME/smart/bin/$COMP/env
 
 # WARNING : this should realy be later in the code, but need it here to be used in the ls in the next line:
 subdir="??????????????"

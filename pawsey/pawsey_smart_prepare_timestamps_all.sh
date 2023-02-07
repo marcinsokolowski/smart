@@ -3,7 +3,6 @@
 # WARNING : programs azh2radec and date2date are probably not compiled on galaxy/magnus ..., but I can do it ...
 # Example : sbatch -p workq -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh 1278106408
 
-# SETONIX : --account=director2183 - use explicit option of sbatch vs. 
 #SBATCH --account=pawsey0348
 #SBATCH --account=mwavcs
 #SBATCH --time=23:59:00
@@ -15,18 +14,11 @@
 #SBATCH --export=NONE
 
 echo "DEBUG : COMP = $COMP"
-
-if [[ $PAWSEY_CLUSTER == "setonix" ]]; then
-   echo "INFO : Setonix cluster detected"   
+if [[ -s $HOME/smart/bin/$COMP/env ]]; then
+   echo "source $HOME/smart/bin/$COMP/env"
+   source $HOME/smart/bin/$COMP/env
 else
-   echo "INFO : Non-Setonix cluster detected"
-
-   if [[ -s $HOME/smart/bin/$COMP/env ]]; then
-      echo "source $HOME/smart/bin/$COMP/env"
-      source $HOME/smart/bin/$COMP/env
-   else
-      echo "WARNING : file $HOME/smart/bin/$COMP/env not found -> most likely non-PAWSEY system"
-   fi
+   echo "WARNING : file $HOME/smart/bin/$COMP/env not found -> most likely non-PAWSEY system"
 fi
 
 smart_bin=$SMART_DIR/bin/
