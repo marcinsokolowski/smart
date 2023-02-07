@@ -91,10 +91,10 @@ if [[ $comp == "mwa-process02" ]]; then
 #    export PATH=/home/msok/mwa_software/anoko/anoko/chgcentre/build/:$PATH
 fi
 
-wsclean_path="/group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean"
-if [[ $cluster == "mwa" || $cluster == "garrawarla" ]]; then # mwa = garrawarla
-   wsclean_path=`which wsclean`
-fi
+# wsclean_path="/group/mwa/software/wsclean/wsclean2.6-112-gefc7f07/magnus/bin/wsclean"
+#if [[ $cluster == "mwa" || $cluster == "garrawarla" ]]; then # mwa = garrawarla
+wsclean_path=`which wsclean`
+#fi
 
 NCPUS=4
 srun_command=srun 

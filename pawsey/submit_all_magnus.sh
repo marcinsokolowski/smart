@@ -93,6 +93,14 @@ if [[ -n "${14}" && "${14}" != "-" ]]; then
    pixscale_param=${14}
 fi
 
+use_slurm=1
+if [[ -n "$SMART_USE_SLURM" ]]; then
+   use_slurm=$SMART_USE_SLURM
+fi
+if [[ -n "${15}" && "${15}" != "-" ]]; then
+   use_slurm=${15}
+fi
+
 
 echo "#####################################################"
 echo "PARAMETERS :"
@@ -103,6 +111,7 @@ echo "n_iter          = $n_iter"
 echo "wsclean_options = $wsclean_options"
 echo "queue           = $queue"
 echo "pixscale_param  = $pixscale_param"
+echo "use_slurm       = $use_slurm"
 echo "#####################################################"
 
 
@@ -149,8 +158,13 @@ do
    fi
    
    # /astro/mwaops/vcs/ -> /astro/mwavcs/vcs/1275085816/vis/
-   echo "sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\" ${pixscale_param}"
-   sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}
+   if [[ $use_slurm -gt 0 ]]; then
+      echo "sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\" ${pixscale_param}"
+      sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}
+   else      
+      echo "$SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}"
+      $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}      
+   fi
 
 #   echo "mv ${timestep_file} ${timestep_file}.SUBMITTED"
 #   mv ${timestep_file} ${timestep_file}.SUBMITTED
@@ -167,9 +181,13 @@ if [[ -s ${obsid}.metafits ]]; then
    dec_deg=`echo $object | awk '{h=substr($1,1,2);m=substr($1,4,2);s=substr($1,7,2);ra_deg=h+((m*60.00+s)/3600.00)/15.00;sign_dec=substr($2,1,1);sign=1;if(sign_dec="-"){sign=-1;}d=substr($2,2,2);dm=substr($2,5,2);ds=substr($2,8,2);dec_deg=(sign*(d+(dm*60.000+ds)/3600.00));print dec_deg;}'`
    center_channel=`fitshdr ${obsid}.metafits | grep CENTCHAN | awk '{print $2}'`
    
-   
-   echo "sbatch -p workq -M $sbatch_cluster pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}"
-   sbatch -p workq -M $sbatch_cluster pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}
+   if [[ $use_slurm -gt 0 ]]; then   
+      echo "sbatch -p workq -M $sbatch_cluster pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}"
+      sbatch -p workq -M $sbatch_cluster pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}
+   else
+      echo "pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}"
+      pawsey_mwa_sensitivity_radec.sh ${obsid} ${ra_deg} ${dec_deg} ${center_channel} ${obsid} ${n_timesteps}
+   fi
 else
    echo "WARNING : metafits file ${obsid}.metafits not found -> cannot calculate expected sensitivity of the mean image"
 fi   
