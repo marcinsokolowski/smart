@@ -1,0 +1,5 @@
+#!/bin/bash
+
+rsync -avP setonix.pawsey.org.au:/software/projects/director2183/msok//smart/*{sh,py} .
+rsync -avP setonix.pawsey.org.au:/software/projects/director2183/msok//smart/pawsey/*{sh,py} pawsey/
+
