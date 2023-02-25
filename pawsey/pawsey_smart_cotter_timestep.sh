@@ -498,8 +498,10 @@ do
          echo "rm -fr ${obsid}_${timestamp}.ms ${obsid}_${timestamp}.ms.flag*"
          rm -fr ${obsid}_${timestamp}.ms ${obsid}_${timestamp}.ms.flag*   
       fi
-   fi   
-   touch ${wsclean_fits_file}
+   fi
+   
+   # this is creating also these zero-bytes _V files    
+   # touch ${wsclean_fits_file}
    
    if [[ $subdirs -gt 0 ]]; then
       cd $original_dir

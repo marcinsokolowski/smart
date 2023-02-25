@@ -114,11 +114,11 @@ do
    ls mean_stokes_${stokes}_?????.fits > mean_fits_stokes_${stokes}_list
    ls rms_stokes_${stokes}_?????.fits > rms_fits_stokes_${stokes}_list
    
-   echo "python $SMART_DIR/bin/dump_pixel_simple.py mean_fits_stokes_${stokes}_list --radius=2 --outfile=mean_fits_stokes_${stokes}.txt --time_step=${n}"
-   python $SMART_DIR/bin/dump_pixel_simple.py mean_fits_stokes_${stokes}_list --radius=2 --outfile=mean_fits_stokes_${stokes}.txt --time_step=${n}
+   echo "python $SMART_DIR/bin/dump_pixel_simple.py mean_fits_stokes_${stokes}_list - - - --radius=2 --outfile=mean_fits_stokes_${stokes}.txt --time_step=${n}"
+   python $SMART_DIR/bin/dump_pixel_simple.py mean_fits_stokes_${stokes}_list - - - --radius=2 --outfile=mean_fits_stokes_${stokes}.txt --time_step=${n}
 
-   echo "python $SMART_DIR/bin/dump_pixel_simple.py rms_fits_stokes_${stokes}_list --radius=2 --outfile=rms_fits_stokes_${stokes}.txt --time_step=${n}"
-   python $SMART_DIR/bin/dump_pixel_simple.py rms_fits_stokes_${stokes}_list --radius=2 --outfile=rms_fits_stokes_${stokes}.txt --time_step=${n}
+   echo "python $SMART_DIR/bin/dump_pixel_simple.py rms_fits_stokes_${stokes}_list - - - --radius=2 --outfile=rms_fits_stokes_${stokes}.txt --time_step=${n}"
+   python $SMART_DIR/bin/dump_pixel_simple.py rms_fits_stokes_${stokes}_list - - - --radius=2 --outfile=rms_fits_stokes_${stokes}.txt --time_step=${n}
    
    awk '{if($1!="#"){print $1" "$5;}}' mean_fits_stokes_${stokes}.txt > mean${stokes}.txt
    awk '{if($1!="#"){print $1" "$5;}}' rms_fits_stokes_${stokes}.txt > rms${stokes}.txt
