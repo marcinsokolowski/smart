@@ -374,8 +374,15 @@ do
    
             # 2020-07-11 - -norfi removed 
             ux_start=`date +%s`
-            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos -flagantenna $flag_tiles_list -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos -flagantenna $flag_tiles_list -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            flag_antenna_options="-flagantenna $flag_tiles_list"
+            if [[ -n "$flag_tiles_list" ]]; then
+               echo "DEBUG : there are flagged antennas -> flag_antenna_options=-flagantenna $flag_tiles_list"
+            else
+               flag_antenna_options=""
+               echo "WARNING : no antenna is flagged -> this may cause issues due to bad antennas"
+            fi
+            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos ${flag_antenna_options} -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
+            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos ${flag_antenna_options} -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${bin_file} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
             ux_end=`date +%s`
             ux_diff=$(($ux_end-$ux_start))
             echo "COTTER_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" > benchmarking.txt

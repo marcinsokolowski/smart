@@ -167,7 +167,8 @@ fi
 briggs=-1
 clean="-scale $pixscale -nmiter 1 -niter ${n_iter} -threshold ${clean_thresh} -mgain 0.85"
 if [[ "$wsclean_type" == "optimised" || "$wsclean_type" == "deep_clean" ]]; then
-   clean="-mfs-weighting -scale $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8"
+   # 20230227 : -mfs-weighting -> -mf-weighting
+   clean="-mf-weighting -scale $pixscale -nmiter 1 -niter ${n_iter} -local-rms -auto-mask 3 -auto-threshold 1.2 -circular-beam -multiscale -mgain 0.8"
 else
    if [[ "$wsclean_type" == "jay" || "$wsclean_type" == "jai" ]]; then 
       # pixscale="-scale 16asec" vs. I have 20 arcsec
