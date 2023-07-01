@@ -29,20 +29,36 @@ Sett et al., "Image-based searches for pulsar candidates using MWA VCS data ", P
 
 
 @ARTICLE{2023PASA...40....3S,
+
        author = {{Sett}, S. and {Bhat}, N.~D.~R. and {Sokolowski}, M. and {Lenc}, E.},
+       
         title = "{Image-based searches for pulsar candidates using MWA VCS data}",
+        
       journal = {\pasa},
+      
      keywords = {instrumentation:interferometers, methods:observational, pulsars:general, techniques:interferometric, Astrophysics - High Energy Astrophysical Phenomena, Astrophysics - Instrumentation and Methods for Astrophysics},
+     
          year = 2023,
+         
         month = jan,
+        
        volume = {40},
+       
           eid = {e003},
+          
         pages = {e003},
+        
           doi = {10.1017/pasa.2022.59},
+          
 archivePrefix = {arXiv},
+
        eprint = {2212.06982},
+       
  primaryClass = {astro-ph.HE},
+ 
        adsurl = {https://ui.adsabs.harvard.edu/abs/2023PASA...40....3S},
+       
       adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+      
 }
 
