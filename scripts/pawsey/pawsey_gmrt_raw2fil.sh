@@ -24,14 +24,15 @@ rawfile=${rawfile_base}.raw
 filheadfile=${rawfile_base}.fil.head
 filfile=${rawfile_base}.fil
 
-export PATH=/home/msok/github/ugmrt2fil/:$PATH
+UGMRT_SOFT_PATH=/home/msok/github/ugmrt2fil/
+export PATH=$UGMRT_SOFT_PATH:$PATH
 
 #                                                  RAW_FILENAME                               OUTPUT_HEADER_FILE .fil.head            PSRNAME  MJD    FREQ[MHz] N_CHAN BW[MHz] TimeRes[sec?] sAME: OUTPUT_HEADER_FILE .fil.head
-echo "/home/msok/github/ugmrt2fil/ugmrtfilhead ${rawfile} ${filheadfile} J1857-1027 1000.00 1000.00 32 100.00 0.01 ${filheadfile}"
-/home/msok/github/ugmrt2fil/ugmrtfilhead ${rawfile} ${filheadfile} J1857-1027 1000.00 1000.00 32 100.00 0.01 ${filheadfile}
+echo "${UGMRT_SOFT_PATH}/ugmrtfilhead ${rawfile} ${filheadfile} J1857-1027 1000.00 1000.00 32 100.00 0.01 ${filheadfile}"
+${UGMRT_SOFT_PATH}/ugmrtfilhead ${rawfile} ${filheadfile} J1857-1027 1000.00 1000.00 32 100.00 0.01 ${filheadfile}
 
 # TODO : update parameters and maybe add option -u for USB (vs. LSB!) - here:
 # created .fil file :
-echo "/home/msok/github/ugmrt2fil/ugmrt2fil -i ${rawfile} -o ${filfile}  -j J1857-1027 -d 1000.00 -f 1000.00 -c 32 -w 100.00 -t 0.001 ${options}"
-/home/msok/github/ugmrt2fil/ugmrt2fil -i ${rawfile} -o ${filfile}  -j J1857-1027 -d 1000.00 -f 1000.00 -c 32 -w 100.00 -t 0.001 ${options}
+echo "${UGMRT_SOFT_PATH}/ugmrt2fil -i ${rawfile} -o ${filfile}  -j J1857-1027 -d 1000.00 -f 1000.00 -c 32 -w 100.00 -t 0.001 ${options}"
+${UGMRT_SOFT_PATH}/ugmrt2fil -i ${rawfile} -o ${filfile}  -j J1857-1027 -d 1000.00 -f 1000.00 -c 32 -w 100.00 -t 0.001 ${options}
 
