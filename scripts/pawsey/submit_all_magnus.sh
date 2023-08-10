@@ -101,6 +101,10 @@ if [[ -n "${15}" && "${15}" != "-" ]]; then
    use_slurm=${15}
 fi
 
+apply_calibration=1
+if [[ -n "${16}" && "${16}" != "-" ]]; then
+   apply_calibration=${16}
+fi
 
 echo "#####################################################"
 echo "PARAMETERS :"
@@ -112,6 +116,7 @@ echo "wsclean_options = $wsclean_options"
 echo "queue           = $queue"
 echo "pixscale_param  = $pixscale_param"
 echo "use_slurm       = $use_slurm"
+echo "apply_calibration = $apply_calibration"
 echo "#####################################################"
 
 
@@ -159,11 +164,11 @@ do
    
    # /astro/mwaops/vcs/ -> /astro/mwavcs/vcs/1275085816/vis/
    if [[ $use_slurm -gt 0 ]]; then
-      echo "sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\" ${pixscale_param}"
-      sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}
+      echo "sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} \"${object}\" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} \"${wsclean_options}\" ${pixscale_param} ${apply_calibration}"
+      sbatch -p $queue -M $sbatch_cluster $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param} ${apply_calibration}
    else      
-      echo "$SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}"
-      $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param}      
+      echo "$SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param} ${apply_calibration}"
+      $SMART_DIR/bin/pawsey/pawsey_smart_cotter_timestep.sh - ${do_remove} ${vis_dir} ${obsid} ${calid} "${object}" - $imagesize $timestep_file 1 $is_last - ${wsclean_type} ${wsclean_pbcorr} ${n_iter} "${wsclean_options}" ${pixscale_param} ${apply_calibration}     
    fi
 
 #   echo "mv ${timestep_file} ${timestep_file}.SUBMITTED"
