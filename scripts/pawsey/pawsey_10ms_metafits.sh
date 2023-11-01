@@ -16,8 +16,8 @@
 #SBATCH --export=NONE
 
 
-for metafits in `ls *.metafits`
+for metafits in `ls 2*.metafits`
 do
-   echo "python ./fix_selected_metadata.py ${metafits} --n_scans=100 --inttime=0.01"
-   python ./fix_selected_metadata.py ${metafits} --n_scans=100 --inttime=0.01
+   echo "python ~/smart/bin/fix_selected_metadata.py ${metafits} --n_scans=100 --inttime=0.01"
+   python ~/smart/bin/fix_selected_metadata.py ${metafits} --n_scans=100 --inttime=0.01
 done

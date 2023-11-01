@@ -187,6 +187,11 @@ if [[ -n "${18}" && "${18}" != "-" ]]; then
    apply_calibration=${18}
 fi
 
+cotter_options=""
+if [[ -n "${19}" && "${19}" != "-" ]]; then
+   cotter_options="${19}"
+fi
+
 
 peel_model_file="peel_model.txt"
 
@@ -220,6 +225,7 @@ echo "wsclean_options = $wsclean_options"
 echo "is_idg          = $is_idg"
 echo "pixscale_param  = $pixscale_param"
 echo "apply_calibration = $apply_calibration"
+echo "cotter_options  = $cotter_options"
 echo "#############################################"
 
 
@@ -392,12 +398,12 @@ do
                echo "WARNING : no antenna is flagged -> this may cause issues due to bad antennas"
             fi
 
-            apply_calibration=""
+            apply_calibration_option=""
             if [[ $apply_calibration -gt 0 ]]; then
-               apply_calibration="-full-apply ${bin_file}"
+               apply_calibration_option="-full-apply ${bin_file}"
             fi
-            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos ${flag_antenna_options} -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 ${apply_calibration} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits"
-            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos ${flag_antenna_options} -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 ${apply_calibration} ${phase_centre} -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}*gpubox*.fits   
+            echo "$srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos ${flag_antenna_options} -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 ${apply_calibration_option} ${phase_centre} -o ${obsid}_${timestamp}.ms ${cotter_options} ${obsid}_${timestamp}*gpubox*.fits"
+            $srun_command cotter -absmem 64 -j 12 -timeres 1 -freqres 0.01 -edgewidth ${edge} -noflagautos ${flag_antenna_options} -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 ${apply_calibration_option} ${phase_centre} -o ${obsid}_${timestamp}.ms ${cotter_options} ${obsid}_${timestamp}*gpubox*.fits   
             ux_end=`date +%s`
             ux_diff=$(($ux_end-$ux_start))
             echo "COTTER_TOTAL : ux_start = $ux_start , ux_end = $ux_end -> ux_diff = $ux_diff" > benchmarking.txt

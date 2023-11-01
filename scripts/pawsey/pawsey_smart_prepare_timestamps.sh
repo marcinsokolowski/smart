@@ -91,6 +91,11 @@ if [[ -n "${10}" && "${10}" != "-" ]]; then
    calid=${10}
 fi
 
+subsecond_images=0
+if [[ -n "${11}" && "${11}" != "-" ]]; then
+   subsecond_images=${11}
+fi
+
 
 force=0
 
@@ -108,6 +113,7 @@ echo "force             = $force"
 echo "remote_dir        = $remote_dir"
 echo "jobs_per_file     = $jobs_per_file"
 echo "max_timestamps    = $max_timestamps"
+echo "subsecond_images  = $subsecond_images"
 echo "#################################################################################"
 
 # just to reflect on the parameters (check if correct)
@@ -185,6 +191,15 @@ done < timestamps.txt
 
 echo "$SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh $jobs_per_file timestamps.txt $max_timestamps"
 $SMART_DIR/bin/pawsey//split_timesteps_to_jobs.sh $jobs_per_file timestamps.txt $max_timestamps
+
+if [[ $subsecond_images -gt 0 ]]; then
+   echo "INFO : subsecond images - changing metafits files (WARNING - currently hardcoded for 10ms images)"
+   
+   echo "$SMART_DIR/bin/pawsey/pawsey_10ms_metafits.sh"
+   $SMART_DIR/bin/pawsey/pawsey_10ms_metafits.sh 
+else
+   echo "INFO : not sub-second images"
+fi
 
 if [[ -n "$remote_dir" ]]; then
    echo "INFO : copying resulting metafits files and timestamp files to remote directory : $remote_dir"
