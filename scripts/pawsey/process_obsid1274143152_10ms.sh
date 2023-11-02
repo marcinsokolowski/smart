@@ -92,5 +92,5 @@ fi
 cnt=`wc -l fits_list_XX | awk '{print $1;}'`
 echo "Number of FITS files to average = $cnt"
 
-echo "avg_images fits_list_XX"
-avg_images fits_list_XX
+echo "avg_images fits_list_XX out.fits out_rms.fits -r 100000 -r 100000"
+avg_images fits_list_XX out.fits out_rms.fits -r 100000 -r 100000
