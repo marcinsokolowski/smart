@@ -42,6 +42,12 @@ if [[ -n "$6" && "$6" != "-" ]]; then
    top_ch=$6
 fi
 
+image_size=2048
+if [[ -n "$7" && "$7" != "-" ]]; then
+   image_size=$7
+fi
+
+
 echo "#####################################################"
 echo "PARAMETERS:"
 echo "#####################################################"
@@ -50,6 +56,7 @@ echo "gpstime = $gpstime , timestamp = $timestamp"
 echo "calid = $calid"
 echo "wsclean_options = $wsclean_options"
 echo "Top frequency channel = $top_ch"
+echo "image size = $image_size"
 echo "#####################################################"
 
 
@@ -84,8 +91,8 @@ echo "cotter -absmem 64 -j 12 -timeres 0.01 -freqres 0.01 -edgewidth 80 -noflaga
 cotter -absmem 64 -j 12 -timeres 0.01 -freqres 0.01 -edgewidth 80 -noflagautos  -m ${timestamp}.metafits -noflagmissings -allowmissing -offline-gpubox-format -initflag 0 -full-apply ${calid}.bin -o ${obsid}_${timestamp}.ms ${obsid}_${timestamp}_*gpubox*fits
 
 # WSCLEAN :
-echo "$SMART_DIR/bin/pawsey//submit_10ms_dirty_images.sh ${obsid} ${timestamp} \"${wsclean_options}\" 2048"
-$SMART_DIR/bin/pawsey//submit_10ms_dirty_images.sh ${obsid} ${timestamp} "${wsclean_options}" 2048
+echo "$SMART_DIR/bin/pawsey//submit_10ms_dirty_images.sh ${obsid} ${timestamp} \"${wsclean_options}\" $image_size"
+$SMART_DIR/bin/pawsey//submit_10ms_dirty_images.sh ${obsid} ${timestamp} "${wsclean_options}" $image_size
 
 cd ${timestamp}
 echo "ls wsclean_${obsid}_${timestamp}_briggs_timeindex???-XX-dirty.fits > fits_list_XX"
