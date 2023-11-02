@@ -68,7 +68,8 @@ do
    # echo "$path -o ${obsid} -s ${uxtime} -r 100 -n 4 -c ${ch_out_str} -d /astro/mwavcs/vcs/${obsid}/combined/${obsid}_${gpstime}_ch${ch}.dat"
    # $path -o ${obsid} -s ${uxtime} -r 100 -n 4 -c ${ch_out_str} -d /astro/mwavcs/vcs/${obsid}/combined/${obsid}_${gpstime}_ch${ch}.dat
 
- 
+
+   # Channels <= 128 are mapped to GPUBOX number in the ASC order (128 -> 1 , 129 -> 2 etc ...) 
    ch=$end_ch
    ch_out=1
    while [[ $ch -le 128 ]];
@@ -86,6 +87,7 @@ do
       ch_out=$(($ch_out+1))
    done
 
+   # Channels >128 are mapped to GPUBOX number in the DESCENDING order (156 -> 1, 155 -> 2 , 154 -> 3 etc ...)
    ch=$start_ch
    while [[ $ch -gt 128 ]];
    do
