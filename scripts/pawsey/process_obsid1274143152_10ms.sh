@@ -31,6 +31,7 @@ if [[ -n "$4" && "$4" != "-" ]]; then
    calid=$4
 fi
 
+# for 24 channels set this (5th) parameter to "-channels-out 24"
 wsclean_options="-"
 if [[ -n "$5" && "$5" != "-" ]]; then
    wsclean_options="$5"
