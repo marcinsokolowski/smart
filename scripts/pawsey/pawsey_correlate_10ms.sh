@@ -69,7 +69,7 @@ do
    # $path -o ${obsid} -s ${uxtime} -r 100 -n 4 -c ${ch_out_str} -d /astro/mwavcs/vcs/${obsid}/combined/${obsid}_${gpstime}_ch${ch}.dat
 
  
-   ch=109
+   ch=$end_ch
    ch_out=1
    while [[ $ch -le 128 ]];
    do
@@ -86,7 +86,7 @@ do
       ch_out=$(($ch_out+1))
    done
 
-   ch=132
+   ch=$start_ch
    while [[ $ch -gt 128 ]];
    do
       ch_out_str=`echo $ch_out | awk '{printf("%02d",$1);}'`

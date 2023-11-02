@@ -37,6 +37,11 @@ if [[ -n "$5" && "$5" != "-" ]]; then
    wsclean_options="$5"
 fi
 
+top_ch=132 # highest of 24 MWA coarse channels 
+if [[ -n "$6" && "$6" != "-" ]]; then
+   top_ch=$6
+fi
+
 echo "#####################################################"
 echo "PARAMETERS:"
 echo "#####################################################"
@@ -44,6 +49,7 @@ echo "obsid = $obsid"
 echo "gpstime = $gpstime , timestamp = $timestamp"
 echo "calid = $calid"
 echo "wsclean_options = $wsclean_options"
+echo "Top frequency channel = $top_ch"
 echo "#####################################################"
 
 
@@ -57,8 +63,8 @@ $SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh ${obsid} /astro/mwavcs/
 
 
 # correlation in 10ms time resolution :
-echo "$SMART_DIR/bin/pawsey/pawsey_correlate_10ms.sh ${obsid} - ${gpstime}"
-$SMART_DIR/bin/pawsey/pawsey_correlate_10ms.sh ${obsid} - ${gpstime}
+echo "$SMART_DIR/bin/pawsey/pawsey_correlate_10ms.sh ${obsid} - ${gpstime} - $top_ch"
+$SMART_DIR/bin/pawsey/pawsey_correlate_10ms.sh ${obsid} - ${gpstime} - $top_ch
 
 # get calibration:
 echo "~/bin/getcal! ${calid}"
