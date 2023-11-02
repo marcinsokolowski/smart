@@ -82,7 +82,15 @@ echo "$SMART_DIR/bin/pawsey//submit_10ms_dirty_images.sh ${obsid} ${timestamp} \
 $SMART_DIR/bin/pawsey//submit_10ms_dirty_images.sh ${obsid} ${timestamp} "${wsclean_options}" 2048
 
 cd ${timestamp}
+echo "ls wsclean_${obsid}_${timestamp}_briggs_timeindex???-XX-dirty.fits > fits_list_XX"
 ls wsclean_${obsid}_${timestamp}_briggs_timeindex???-XX-dirty.fits > fits_list_XX
+cnt=`wc -l fits_list_XX | awk '{print $1;}'`
+if [[ $cnt -le 0 ]]; then
+   echo "ls wsclean_${obsid}_${timestamp}_briggs_timeindex???-????-XX-dirty.fits > fits_list_XX"
+   ls wsclean_${obsid}_${timestamp}_briggs_timeindex???-????-XX-dirty.fits > fits_list_XX
+fi
+cnt=`wc -l fits_list_XX | awk '{print $1;}'`
+echo "Number of FITS files to average = $cnt"
 
 echo "avg_images fits_list_XX"
 avg_images fits_list_XX
