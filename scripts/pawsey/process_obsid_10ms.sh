@@ -47,6 +47,12 @@ if [[ -n "$7" && "$7" != "-" ]]; then
    image_size=$7
 fi
 
+# base_datadir=/astro/mwavcs/vcs/
+base_datadir=/scratch/mwavcs/msok/data/
+if [[ -n "$8" && "$8" != "-" ]]; then
+   base_datadir="$8"
+fi
+
 
 echo "#####################################################"
 echo "PARAMETERS:"
@@ -57,6 +63,7 @@ echo "calid = $calid"
 echo "wsclean_options = $wsclean_options"
 echo "Top frequency channel = $top_ch"
 echo "image size = $image_size"
+echo "base_datadir = $base_datadir"
 echo "#####################################################"
 
 
@@ -65,8 +72,8 @@ echo "#####################################################"
 pwd
 
 # create metafits for 10ms images:
-echo "$SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh ${obsid} /astro/mwavcs/vcs/${obsid}/cal/${obsid}/vis - - - - - - - - 1"
-$SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh ${obsid} /astro/mwavcs/vcs/${obsid}/cal/${obsid}/vis - - - - - - - - 1 
+echo "$SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh ${obsid} ${base_datadir}/${obsid}/cal/${obsid}/vis - - - - - - - - 1"
+$SMART_DIR/bin/pawsey/pawsey_smart_prepare_timestamps.sh ${obsid} ${base_datadir}/${obsid}/cal/${obsid}/vis - - - - - - - - 1 
 
 
 # correlation in 10ms time resolution :
