@@ -62,3 +62,6 @@ archivePrefix = {arXiv},
       
 }
 
+# dependencies 
+
+Program azh2radec can be compiled using this repository : https://github.com/marcinsokolowski/msfitslib
