@@ -762,6 +762,87 @@ def read_text_file( filename ) :
    
    return sources
 
+def write_gleam_sources_xy( fitsname, source_list, flux_list, save_xy=True ) :
+   out_gleam_file = fitsname.replace(".fits","_gleam.txt")
+   regfile = out_gleam_file.replace('.txt', '.reg')
+
+   n_sources = len(source_list)
+
+   # (RA,DEC) [deg] -> (X,Y) image coordinates using WCS from the FITS header :
+   x_list = None
+   y_list = None
+   x_size = -1
+   y_size = -1
+   if save_xy and n_sources > 0 :
+      if not _useastropy :
+         print "ERROR : (RA,DEC) -> (X,Y) conversion requires astropy.wcs -> X,Y will not be saved"
+      elif not os.path.exists( fitsname ) :
+         print "WARNING : FITS file %s does not exist -> cannot convert (RA,DEC) to (X,Y)" % (fitsname)
+      else :
+         fits = pyfits.open( fitsname )
+         h = fits[0].header
+         x_size = h['NAXIS1']
+         y_size = h['NAXIS2']
+         # only use celestial axes (RA,DEC), so that FREQ / STOKES axes (NAXIS=3 or 4) do not need to be provided :
+         w = pywcs.WCS( h ).celestial
+         fits.close()
+
+         ra_arr  = np.array( [ s.ra.value  for s in source_list ] )
+         dec_arr = np.array( [ s.dec.value for s in source_list ] )
+
+         # origin=1 -> 1-based (FITS / ds9) pixel coordinates (same convention as in gleam2reg_base)
+         try :
+            (x_list, y_list) = w.all_world2pix( ra_arr, dec_arr, 1 )
+         except Exception, e :
+            print "WARNING : all_world2pix failed (%s) -> using wcs_world2pix (no distortion corrections)" % (e)
+            (x_list, y_list) = w.wcs_world2pix( ra_arr, dec_arr, 1 )
+
+   out_regfile = open( regfile, "w" )
+   out_regfile.write( "# Region file format: DS9\n" )
+   out_regfile.write( "image\n" )
+
+   out_gleam_f = open( out_gleam_file , "w" )
+   if x_list is not None :
+      out_gleam_f.write("# RA[deg]   DEC[deg]   FLUX[Jy]   X[pix]   Y[pix]   IN_IMAGE\n")
+   else :
+      out_gleam_f.write("# RA[deg]   DEC[deg]   FLUX[Jy]\n")
+
+   n_in_image = 0
+   for i in range(0,n_sources) :
+      source = source_list[i]
+      flux   = flux_list[i]
+
+      if x_list is not None :
+         x = x_list[i]
+         y = y_list[i]
+
+         # 1-based pixel centres run from 1 to NAXIS, pixel edges at 0.5 and NAXIS+0.5 :
+         in_image = 0
+         if np.isfinite(x) and np.isfinite(y) and x >= 0.5 and y >= 0.5 and x <= (x_size+0.5) and y <= (y_size+0.5) :
+            in_image = 1
+            n_in_image += 1
+
+         line = "%.4f   %.4f   %.3f   %.2f   %.2f   %d\n" % (source.ra.value,source.dec.value,flux,x,y,in_image)
+         out_gleam_f.write( line )
+
+         if np.isfinite(x) and np.isfinite(y) :
+            reg_radius = 3 # max( int(flux), 1 )
+            reg_line = "circle %.2f %.2f %d # (RA,DEC) = (%.8f,%.8f) [deg] , GLEAM_flux = %.4f [Jy]\n" % (x,y,reg_radius,source.ra.value,source.dec.value,flux)
+            out_regfile.write( reg_line )
+      else :
+         line = "%.4f   %.4f   %.3f\n" % (source.ra.value,source.dec.value,flux)
+         out_gleam_f.write( line )
+
+   out_gleam_f.close()
+   out_regfile.close()
+
+   if x_list is not None :
+      print "Saved %d GLEAM sources (%d inside the image) to %s and %s" % (n_sources,n_in_image,out_gleam_file,regfile)
+   else :
+      print "Saved %d GLEAM sources to %s" % (n_sources,out_gleam_file)
+
+   return n_sources
+
 def write_gleam_sources( fitsname, source_list, flux_list ) :
    out_gleam_file = fitsname.replace(".fits","_gleam.txt")
    
@@ -777,6 +858,10 @@ def write_gleam_sources( fitsname, source_list, flux_list ) :
       
       line = "%.4f   %.4f   %.3f\n" % (source.ra.value,source.dec.value,flux)
       out_gleam_f.write( line )
+      
+
+   out_gleam_f.close()
+#   out_regfile.close()
       
    return i
    
@@ -815,7 +900,7 @@ def calibrate_image( fitsname, sources_list_file=None, out_fitsfile="calib_xy.fi
          print "There should be %d GLEAM sources brighter than %.2f [Jy/beam] in the image" % (len(gleam_sources),min_flux)
          
          if len( gleam_sources ) > 0 :
-            write_gleam_sources( fitsname, gleam_sources, gleam_fluxes )
+            write_gleam_sources_xy( fitsname, gleam_sources, gleam_fluxes )
         
          progress_idx = 0 
          for image_source in image_sources :
@@ -934,6 +1019,9 @@ def parse_options():
    parser.add_option('-g','--gleam2sql',action="store_true",dest="gleam2sql",default=False, help="Convert GLEAM to SQL [default %s]")
    parser.add_option('-c','--freq_cc','--freq_channel','--frequency_channel',dest="freq_cc",default=145, help="Frequency channel [default %d]",type="int")
    parser.add_option('--cross_match_file', dest="cross_match_file", default=None, help="File with list of sources to cross-match with GLEAM")
+   
+   parser.add_option('-R','--ra','--RA',dest="ra",default=None, help="RA [deg] [default None]",type="float")
+   parser.add_option('-D','--dec','--DEC',dest="dec",default=None, help="DEC [deg] [default None]",type="float")
    (options, args) = parser.parse_args()
 
    return (options, args)
@@ -946,6 +1034,7 @@ if __name__ == '__main__':
    print "#################################################################"
    print "PARAMETERS :"
    print "#################################################################"
+   print "(RA,DEC)  = (%.4f,%.4f) [deg]" % (options.ra,options.dec)
    print "Fits file = %s" % (options.fitsfile)
    print "Text file = %s" % (options.sources_file)
    print "Reg  file = %s" % (options.regfile)
@@ -955,6 +1044,12 @@ if __name__ == '__main__':
    print "Frequency channel = %d" % (options.freq_cc)
    print "cross_match_file = %s" % (options.cross_match_file)
    print "#################################################################"
+   
+   if options.ra is not None and options.dec is not None : 
+       print("Finding GLEAM sources around (RA,DEC) = (%.6f,%.6f) [deg]" % (options.ra,options.dec))
+       (out_sc,out_fluxes,out_distances_arcsec) = find_gleam(options.ra, options.dec, 25*3600, min_flux=options.min_gleam_flux)
+       write_gleam_sources_xy(options.fitsfile, out_sc, out_fluxes)
+       os.sys.exit(0)
 
    if options.cross_match_file is not None :
       cross_match_file( options.cross_match_file )
