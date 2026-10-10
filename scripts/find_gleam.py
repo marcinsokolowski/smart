@@ -762,6 +762,40 @@ def read_text_file( filename ) :
    
    return sources
 
+def radec2xy( ra_deg, dec_deg, fitsfile, origin=1 ) :
+   # Converts (RA,DEC) [deg] to (X,Y) pixel coordinates in the given FITS image
+   # origin=1 -> 1-based (FITS / ds9) pixel coordinates, origin=0 -> 0-based (numpy)
+   # Returns (x,y,regline) where regline is a ds9 circle region line (or None if conversion failed)
+   if not _useastropy :
+      print "ERROR : radec2xy requires astropy.wcs"
+      return (None,None,None)
+
+   if not os.path.exists( fitsfile ) :
+      print "ERROR : FITS file %s does not exist -> cannot convert (RA,DEC) to (X,Y)" % (fitsfile)
+      return (None,None,None)
+
+   fits = pyfits.open( fitsfile )
+   # only use celestial axes (RA,DEC), so that FREQ / STOKES axes (NAXIS=3 or 4) do not need to be provided :
+   w = pywcs.WCS( fits[0].header ).celestial
+   fits.close()
+
+   try :
+      (x, y) = w.all_world2pix( ra_deg, dec_deg, origin )
+   except Exception, e :
+      print "WARNING : all_world2pix failed (%s) -> using wcs_world2pix (no distortion corrections)" % (e)
+      (x, y) = w.wcs_world2pix( ra_deg, dec_deg, origin )
+
+   x = float(x)
+   y = float(y)
+
+   regline = None
+   if np.isfinite(x) and np.isfinite(y) :
+      regline = "circle %.2f %.2f 3 # (RA,DEC) = (%.8f,%.8f) [deg]\n" % (x,y,ra_deg,dec_deg)
+   else :
+      print "WARNING : (RA,DEC) = (%.4f,%.4f) [deg] cannot be converted to (X,Y) in image %s (outside projection ?)" % (ra_deg,dec_deg,fitsfile)
+
+   return (x,y,regline)
+
 def write_gleam_sources_xy( fitsname, source_list, flux_list, save_xy=True ) :
    out_gleam_file = fitsname.replace(".fits","_gleam.txt")
    regfile = out_gleam_file.replace('.txt', '.reg')
@@ -996,8 +1030,54 @@ def cross_match_file( filename ):
          print
          print       
          
-
+def save_candidates(candra,canddec,regfile,fitsfile) :
+   f = open(regfile,"w")
    
+   l = len(candra)
+   for i in range(0,l):
+      ra = candra[i]
+      dec = canddec[i]
+      
+      (x,y,region_line) = radec2xy(ra,dec,fitsfile)
+      f.write(region_line)      
+      
+   f.close()
+
+def read_candidates( candfile ) :
+   # Reads text file with 2 columns : RA[deg] DEC[deg]
+   # Lines starting with '#' and empty lines are skipped, extra columns are ignored
+   # Returns numpy arrays (ra,dec) in degrees
+   ra  = []
+   dec = []
+
+   if not os.path.exists( candfile ) or os.stat( candfile ).st_size <= 0 :
+      print "WARNING : empty or non-existing file %s" % (candfile)
+      return (np.array(ra),np.array(dec))
+
+   f = open( candfile , 'r' )
+   line_no = 0
+   for line in f.readlines() :
+      line_no += 1
+      line = line.strip()
+      if len(line) == 0 or line[0] == '#' :
+         continue
+
+      words = line.split()  # any whitespace (spaces or tabs, multiple separators)
+      if len(words) < 2 :
+         print "WARNING : line %d in %s has less than 2 columns -> skipped : %s" % (line_no,candfile,line)
+         continue
+
+      try :
+         ra.append( float(words[0]) )
+         dec.append( float(words[1]) )
+      except ValueError :
+         print "WARNING : could not parse line %d in %s -> skipped : %s" % (line_no,candfile,line)
+
+   f.close()
+
+   print "Read %d candidates from file %s" % (len(ra),candfile)
+
+   return (np.array(ra),np.array(dec))   
    
       
    
@@ -1022,6 +1102,7 @@ def parse_options():
    
    parser.add_option('-R','--ra','--RA',dest="ra",default=None, help="RA [deg] [default None]",type="float")
    parser.add_option('-D','--dec','--DEC',dest="dec",default=None, help="DEC [deg] [default None]",type="float")
+   parser.add_option('-C','--cand_file','--candidates','--candfile',dest="candfile",default=None, help="Text file with candidates in format : RA[deg] DEC[deg]",metavar="STRING")
    (options, args) = parser.parse_args()
 
    return (options, args)
@@ -1049,6 +1130,11 @@ if __name__ == '__main__':
        print("Finding GLEAM sources around (RA,DEC) = (%.6f,%.6f) [deg]" % (options.ra,options.dec))
        (out_sc,out_fluxes,out_distances_arcsec) = find_gleam(options.ra, options.dec, 25*3600, min_flux=options.min_gleam_flux)
        write_gleam_sources_xy(options.fitsfile, out_sc, out_fluxes)
+       if options.candfile is not None :
+          (candra,canddec) = read_candidates(options.candfile)
+          regfile = options.candfile.replace(".txt",".reg")
+          save_candidates(candra,canddec,regfile,options.fitsfile)
+          
        os.sys.exit(0)
 
    if options.cross_match_file is not None :
